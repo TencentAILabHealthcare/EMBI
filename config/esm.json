@@ -8,20 +8,20 @@
             "ntokens": 33
         }
     },
-    "freeze_top": 30,
+    "freeze_top": 32,
 
     "data_loader": {
         "type": "EpitopeMHCTCRDataLoader",
         "args":{
-            "data_dir": "../data/raw_data/",
-            "batch_size": 1024,
+            "data_dir": "./data/raw_data/",
+            "batch_size": 10,
             "seed": 0,
             "validation_split": 0.1,
             "test_split": 0.0,
             "response_type": "T cell",
             "epitope_type": "Peptide",
-            "cdr_chain": "both",
-            "max_seq_length": 500
+            "cdr3_chain": "both",
+            "max_seq_length": 300
         }
     },
     "optimizer": {
