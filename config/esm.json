@@ -1,0 +1,57 @@
+{
+    "name": "ESM-Debug",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "ESM2Decoder",
+        "args": {
+            "ntokens": 33
+        }
+    },
+    "freeze_top": 30,
+
+    "data_loader": {
+        "type": "EpitopeMHCTCRDataLoader",
+        "args":{
+            "data_dir": "../data/raw_data/",
+            "batch_size": 1024,
+            "seed": 0,
+            "validation_split": 0.1,
+            "test_split": 0.0,
+            "response_type": "T cell",
+            "epitope_type": "Peptide",
+            "cdr_chain": "both",
+            "max_seq_length": 500
+        }
+    },
+    "optimizer": {
+        "type": "AdamW",
+        "args":{
+            "lr": 0.0001,
+            "weight_decay": 0
+        }
+    },
+    "loss": "CrossEntropyLoss",
+    "metrics": [
+        "accuracy_amino_acid"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 10,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+
+        "save_dir": "../Result/",
+        "save_period": 200,
+        "verbosity": 2,
+        
+        "monitor": "min val_loss",
+        "early_stop": 5,
+
+        "tensorboard": true
+    }
+}
