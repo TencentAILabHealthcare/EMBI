@@ -37,9 +37,9 @@ class EpitopeMHCTCRDataset(Dataset):
         # print('MHC',MHC)
         chain1_cdr3 = self.chain1_cdr3[index]
         chain2_cdr3 = self.chain2_cdr3[index]
-
+        print('chain1_cdr3',chain1_cdr3)
         # print('chain_cdr3',chain1_cdr3)
-        immunogenic = torch.tensor(self.immunogenic[index], dtype=int)
+        immunogenic = torch.tensor(self.immunogenic[index], dtype=torch.float32)
         # print('immunogenic',immunogenic)
         encoded_epitope = self.tokenizer(
             epitope,
@@ -61,24 +61,35 @@ class EpitopeMHCTCRDataset(Dataset):
         encoded_chain1_cdr3 = self.tokenizer(
             chain1_cdr3,
             truncation="only_first",
-            max_length = self.max_seq_length,
+            max_length = 20,
             padding="max_length",
             return_tensors="pt"
         ) 
+        print('encoded_chain1_cdr3', encoded_chain1_cdr3)
         encoded_chain2_cdr3 = self.tokenizer(
             chain2_cdr3,
             truncation="only_first",
-            max_length = self.max_seq_length,
+            max_length = 20,
             padding="max_length",
             return_tensors="pt"
         )        
         # print('encoded_chain_cdr3',encoded_chain_cdr3)
         epitope_MHC_cdr3_inputs = torch.concat((encoded_epitope['input_ids'],encoded_MHC['input_ids'], encoded_chain1_cdr3['input_ids'],encoded_chain2_cdr3['input_ids']),
                                         axis=1)
+        # # don't use MHC to test model
+        # epitope_MHC_cdr3_inputs = torch.concat((encoded_epitope['input_ids'],encoded_chain1_cdr3['input_ids'],encoded_chain2_cdr3['input_ids']),
+        #                                 axis=1)
+
         epitope_MHC_cdr3_attention_mask = torch.concat((
             encoded_epitope['attention_mask'],encoded_MHC['attention_mask'], 
             encoded_chain1_cdr3['attention_mask'],encoded_chain2_cdr3['attention_mask']),
             axis=1) 
+
+        # don't use MHC to test model
+        # epitope_MHC_cdr3_attention_mask = torch.concat((
+        #     encoded_epitope['attention_mask'], 
+        #     encoded_chain1_cdr3['attention_mask'],encoded_chain2_cdr3['attention_mask']),
+        #     axis=1) 
         # print('epitope_MHC_cdr3_inputs',epitope_MHC_cdr3_inputs.shape)
         # print('epitope_MHC_cdr3_attention_mask',epitope_MHC_cdr3_attention_mask.shape)
         # print('immunogenic',immunogenic.shape)
@@ -105,13 +116,14 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         self.logger.info('Load pretrained tokenizer from ESM-1b ...')
         self.tokenizer = ESMTokenizer.from_pretrained("facebook/esm-1b", do_lower_case=False, local_files_only=True)
 
-        self.iedb_df, self.PRIME_df, self.Allele_data = self._load_data()
-        self.logger.info('IEDB, PIRME load successfully')
-        self.iedb_allele_hla_dict, self.PRIME_allele_hla_dict = self._load_allele_hla_seq()
+        self.iedb_df, self.PRIME_df, self.Allele_data, self.VDJdb_df = self._load_data()
+        self.logger.info('IEDB, PIRME data load successfully')
+        self.iedb_allele_hla_dict, self.PRIME_allele_hla_dict, self.VDJdb_allele_hla_dict = self._load_allele_hla_seq()
         self.cdr3b_healthy = self._load_CDR3b_from_TCRdb(self.iedb_df)
         self.logger.info('healthy CDR3b extracted completely')
 
-        self.train_dataset = self._prepare_dataset(self.iedb_df, self.PRIME_df)
+        self.train_dataset = self._prepare_dataset(self.iedb_df, self.PRIME_df, self.VDJdb_df)
+        # print('train_dataset', self.train_dataset.shape)
         self.logger.info('Load train dataset successfully')
         super().__init__(self.train_dataset, batch_size, seed, shuffle, validation_split, test_split, num_workers)
         
@@ -127,7 +139,8 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         iedb_df = pd.read_csv(join(self.data_dir, 'iedb_receptor_full_v3.csv'), dtype=str)
         PRIME_df = pd.read_csv(join(self.data_dir,'Epitope_info_from_PRIME.csv'), dtype=str)
         Allele_data = pd.read_csv(join(self.data_dir, 'Allelelist.390.txt'),comment='#',dtype=str)
-        return iedb_df, PRIME_df, Allele_data
+        VDJdb_df = pd.read_csv(join(self.data_dir, 'VDJdb_paired.tsv'), dtype=str,sep='\t')
+        return iedb_df, PRIME_df, Allele_data, VDJdb_df
     
     def _load_allele_hla_seq(self):
         with open('/data/home/yixinguo/TcellEpitope/data/raw_data/IEDB_allele_HLA.json','r') as f:
@@ -137,8 +150,10 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         with open('/data/home/yixinguo/TcellEpitope/data/raw_data/PRIME_allele_HLA.json','r') as f:
             PRIME_allele_hla_dict = json.load(f)
         # PRIME_allele_hla_dict = json.loads(PRIME_data)
+        with open('/data/home/yixinguo/TcellEpitope/data/raw_data/VDJdb_allele_HLA.json','r') as f:
+            VDJdb_allele_hla_dict = json.load(f)
 
-        return iedb_allele_hla_dict, PRIME_allele_hla_dict
+        return iedb_allele_hla_dict, PRIME_allele_hla_dict, VDJdb_allele_hla_dict
 
     def _load_CDR3b_from_TCRdb(self, iedb_df):
         def extractAAseq(file):
@@ -169,7 +184,10 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
 
         
     def _process(self, df):
-        df = df.dropna(subset=['Description'])
+        df = df.dropna(subset=['Description','Chain 1 CDR3 Calculated','Chain 2 CDR3 Calculated' ])
+        print('df before:',df.shape)
+        # df.drop_duplicates(subset=['Description','MHC Allele Names'])
+        print('df after:',df.shape)
         epitope_types = df['Description'].apply(self._classify_epitopes)
         df_filter = df.loc[epitope_types==self.epitope_type]
         df_filter = df_filter.loc[df_filter['Response Type'].str.match(self.response_type)] 
@@ -190,7 +208,7 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         self.logger.info('MHC seq success!')
         ## to do 
         data_immunogenic = [1] * df_filter.shape[0]
-        print('data_immunogenic',len(data_immunogenic))
+        # print('data_immunogenic',len(data_immunogenic))
         """
         if self.cdr3_chain == "chain 1":
             data_y_CDR3 = data_y1_CDR3
@@ -217,17 +235,64 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         data_immunogenic = [int(i) for i in df_filter['Immunogenicity'].to_list()]
         return [data_x_epitopes, data_MHC_seq, data_y1_CDR3, data_y2_CDR3, data_immunogenic]
 
+    def _process_VDJdb_df(self, VDJdb_df):
+        VDJdb_paired_ = VDJdb_df.iloc[:26804]
+        VDJdb_paired_['CDR3_chain1'] = VDJdb_df.iloc[26804:]['CDR3'].to_list()
+        VDJdb_paired_ = VDJdb_paired_.drop_duplicates(subset=['CDR3','CDR3_chain1','MHC A','Epitope'])
+        data_x_epitopes = VDJdb_paired_['Epitope'].to_list()
+        
+        data_y1_CDR3 = VDJdb_paired_['CDR3'].to_list()
+        data_y2_CDR3 = VDJdb_paired_['CDR3_chain1'].to_list()
+        data_MHC_seq = VDJdb_paired_['MHC A'].apply(lambda x: self.VDJdb_allele_hla_dict[x] if (str(x) != 'nan') else '').to_list()
+        
+        data_immunogenic = [1] * VDJdb_paired_.shape[0]
+        return [data_x_epitopes, data_MHC_seq, data_y1_CDR3, data_y2_CDR3, data_immunogenic]
 
-    def _prepare_dataset(self, iedb_df, PRIME_df):
+
+    def _prepare_dataset(self, iedb_df, PRIME_df, VDJdb_df):
         original_data = self._process(iedb_df)
+        # print('1:',len(original_data[0]))
+        # drop duplicates 
+        original_data_df = pd.DataFrame(original_data).T
+        original_data_df.columns = ['epitope','MHC','chain1_CDR3','chain2_CDR3','immunogenic']
+        original_data_df.drop_duplicates(subset=['epitope','MHC','immunogenic'],inplace=True)
+        original_data_df = original_data_df[original_data_df['MHC'] != '']
+        original_data_df.to_csv('iedb_processed.csv',index=None)
+
+        iedb_processed_df = [original_data_df.iloc[:,0].to_list(), original_data_df.iloc[:,1].to_list(),
+                            original_data_df.iloc[:,2].to_list(),original_data_df.iloc[:,3].to_list(),
+                            original_data_df.iloc[:,4].to_list()]
+        print('2:',len(iedb_processed_df[0]))
         non_immunogenic_data = self._process_RPIME_df(PRIME_df, self.cdr3b_healthy)
-        ### merge iddb and PRIME data ### 
-        for i in range(len(original_data)):
-            print('data type:',type(original_data[i][0]))
-            original_data[i].append(non_immunogenic_data[i])
+        print('IEDB dataset:', len(iedb_processed_df[0]))
+        print('non_immunogenic_data:', len(non_immunogenic_data[0]))
+
+        VDJ_db_data = self._process_VDJdb_df(VDJdb_df)
+        VDJdb_idx_full = np.arange(len(VDJ_db_data[0]))
+        np.random.shuffle(VDJdb_idx_full)
+        VDJ_db_data_random = [[],[],[],[],[]]
+        for i in VDJdb_idx_full[:6000]:
+            VDJ_db_data_random[0].append(VDJ_db_data[0][i])
+            VDJ_db_data_random[1].append(VDJ_db_data[1][i])
+            VDJ_db_data_random[2].append(VDJ_db_data[2][i])
+            VDJ_db_data_random[3].append(VDJ_db_data[3][i])
+            VDJ_db_data_random[4].append(VDJ_db_data[4][i])
+
+
+        ### merge iddb and PRIME data and VDJdb data### 
+        for i in range(len(iedb_processed_df)):
+            # print('data type:',type(original_data[i][0]))
+            iedb_processed_df[i].extend(non_immunogenic_data[i])
+
+        for i in range(len(iedb_processed_df)):
+            iedb_processed_df[i].extend(VDJ_db_data_random[i])
+        print('after:', len(iedb_processed_df[0]))
+
+
             
-        dataset = EpitopeMHCTCRDataset(original_data, tokenizer=self.tokenizer, max_seq_length=self.max_seq_length)
+        dataset = EpitopeMHCTCRDataset(iedb_processed_df, tokenizer=self.tokenizer, max_seq_length=self.max_seq_length)
         return dataset
+
 
     def _classify_epitopes(self, epitope_description):
         '''Return the classification of epitopes.

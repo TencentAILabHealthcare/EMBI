@@ -55,12 +55,13 @@ class ESMTraniner(BaseTrainer):
         for batch_idx, (x_input_ids, x_attention_mask, target) in enumerate(self.data_loader):
             x_input_ids, x_attention_mask = x_input_ids.to(self.device), x_attention_mask.to(self.device)
             target = target.to(self.device)
-            print('target',target.shape)
+            # print('target',target.shape)
 
             output = self.model(x_input_ids, x_attention_mask)
-            print('output',output.shape)
-            # target shape: [batch_size, seq_len*2], output shape: [batch_size, seq_len*2, n_token]
-            loss = self.criterion(output, target.reshape((10,1)))
+             
+            # print('output',output.shape)
+            # target shape: [batch_size,], output shape: [batch_size, 920, 1]
+            loss = self.criterion(output, target)
             loss.backward()
             self.optimizer.step()
 
@@ -68,12 +69,15 @@ class ESMTraniner(BaseTrainer):
             self.train_metrics.update('loss', loss.item())
             with torch.no_grad():
                 y_pred = output.cpu().detach().numpy()
+                y_pred = np.round_(y_pred)
                 y_true = np.squeeze(target.cpu().detach().numpy())
+                # print('y_pred',y_pred.shape)
+                # print('y_true',y_true.shape)
+               
                 for met in self.metric_fns:
                     self.train_metrics.update(met.__name__, met(y_pred, y_true))
 
                 # compute the total correct predictions
-                # correct_count need to implement 
                 correct, num = correct_count(y_pred, y_true)
                 correct_output['count'] += correct
                 correct_output['num'] += num   
@@ -111,7 +115,7 @@ class ESMTraniner(BaseTrainer):
                 target = target.to(self.device)
 
                 output = self.model(x_input_ids, x_attention_mask)
-                loss = self.criterion(output.view(-1, self.ntoken), torch.flatten(target))      
+                loss = self.criterion(output, target)      
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 self.valid_metrics.update('loss', loss.item())
@@ -148,7 +152,7 @@ class ESMTraniner(BaseTrainer):
                 target = target.to(self.device)
 
                 output = self.model(x_input_ids, x_attention_mask)
-                loss = self.criterion(output.view(-1, self.ntoken), torch.flatten(target))
+                loss = self.criterion(output, target)
 
                 print(loss.item())
 

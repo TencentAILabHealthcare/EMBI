@@ -14,7 +14,7 @@
         "type": "EpitopeMHCTCRDataLoader",
         "args":{
             "data_dir": "./data/raw_data/",
-            "batch_size": 10,
+            "batch_size": 20,
             "seed": 0,
             "validation_split": 0.1,
             "test_split": 0.0,
@@ -27,13 +27,13 @@
     "optimizer": {
         "type": "AdamW",
         "args":{
-            "lr": 0.0001,
+            "lr": 0.00001,
             "weight_decay": 0
         }
     },
     "loss": "CrossEntropyLoss",
     "metrics": [
-        "accuracy_amino_acid"
+        "accuracy_sample"
     ],
     "lr_scheduler": {
         "type": "StepLR",
