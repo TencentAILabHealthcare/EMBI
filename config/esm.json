@@ -8,13 +8,13 @@
             "ntokens": 33
         }
     },
-    "freeze_top": 32,
+    "freeze_top": 30,
 
     "data_loader": {
         "type": "EpitopeMHCTCRDataLoader",
         "args":{
             "data_dir": "./data/raw_data/",
-            "batch_size": 20,
+            "batch_size": 300,
             "seed": 0,
             "validation_split": 0.1,
             "test_split": 0.0,
@@ -31,7 +31,7 @@
             "weight_decay": 0
         }
     },
-    "loss": "CrossEntropyLoss",
+    "loss": "BCELoss",
     "metrics": [
         "accuracy_sample"
     ],

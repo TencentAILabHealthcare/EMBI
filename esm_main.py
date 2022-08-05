@@ -70,6 +70,7 @@ def main(config):
 
     # load best checkpoint
     resume = str(config.save_dir / 'model_best.pth')
+    # resume = '../Result/checkpoints/ESM-Debug/0805_165059/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']

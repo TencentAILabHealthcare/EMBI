@@ -20,10 +20,10 @@ import random
 class EpitopeMHCTCRDataset(Dataset):
     def __init__(self, original_data, tokenizer, max_seq_length) -> None:
         self.epitope = original_data[0]
-        self.MHC = original_data[1]
-        self.chain1_cdr3 = original_data[2]
-        self.chain2_cdr3 = original_data[3]
-        self.immunogenic = original_data[4]
+        # self.MHC = original_data[1]
+        # self.chain1_cdr3 = original_data[2]
+        # self.chain2_cdr3 = original_data[3]
+        self.immunogenic = original_data[1]
         self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
     
@@ -33,22 +33,23 @@ class EpitopeMHCTCRDataset(Dataset):
     def __getitem__(self, index):
         epitope = self.epitope[index]
         # print('epitope',epitope)
-        MHC = self.MHC[index]
+        # MHC = self.MHC[index]
         # print('MHC',MHC)
-        chain1_cdr3 = self.chain1_cdr3[index]
-        chain2_cdr3 = self.chain2_cdr3[index]
-        print('chain1_cdr3',chain1_cdr3)
+        # chain1_cdr3 = self.chain1_cdr3[index]
+        # chain2_cdr3 = self.chain2_cdr3[index]
+        # print('chain1_cdr3',chain1_cdr3)
         # print('chain_cdr3',chain1_cdr3)
         immunogenic = torch.tensor(self.immunogenic[index], dtype=torch.float32)
         # print('immunogenic',immunogenic)
         encoded_epitope = self.tokenizer(
             epitope,
             truncation="only_first",
-            max_length = 20,
+            max_length = 30,
             padding="max_length",
             return_tensors="pt"
         )
         # print('encoded_epitope',encoded_epitope)
+        """
         encoded_MHC = self.tokenizer(
             MHC,
             truncation="only_first",
@@ -65,7 +66,7 @@ class EpitopeMHCTCRDataset(Dataset):
             padding="max_length",
             return_tensors="pt"
         ) 
-        print('encoded_chain1_cdr3', encoded_chain1_cdr3)
+        # print('encoded_chain1_cdr3', encoded_chain1_cdr3)
         encoded_chain2_cdr3 = self.tokenizer(
             chain2_cdr3,
             truncation="only_first",
@@ -74,16 +75,13 @@ class EpitopeMHCTCRDataset(Dataset):
             return_tensors="pt"
         )        
         # print('encoded_chain_cdr3',encoded_chain_cdr3)
-        epitope_MHC_cdr3_inputs = torch.concat((encoded_epitope['input_ids'],encoded_MHC['input_ids'], encoded_chain1_cdr3['input_ids'],encoded_chain2_cdr3['input_ids']),
-                                        axis=1)
+        """
+        epitope_MHC_cdr3_inputs = encoded_epitope['input_ids']
         # # don't use MHC to test model
         # epitope_MHC_cdr3_inputs = torch.concat((encoded_epitope['input_ids'],encoded_chain1_cdr3['input_ids'],encoded_chain2_cdr3['input_ids']),
         #                                 axis=1)
 
-        epitope_MHC_cdr3_attention_mask = torch.concat((
-            encoded_epitope['attention_mask'],encoded_MHC['attention_mask'], 
-            encoded_chain1_cdr3['attention_mask'],encoded_chain2_cdr3['attention_mask']),
-            axis=1) 
+        epitope_MHC_cdr3_attention_mask = encoded_epitope['attention_mask']
 
         # don't use MHC to test model
         # epitope_MHC_cdr3_attention_mask = torch.concat((
@@ -142,18 +140,19 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         VDJdb_df = pd.read_csv(join(self.data_dir, 'VDJdb_paired.tsv'), dtype=str,sep='\t')
         return iedb_df, PRIME_df, Allele_data, VDJdb_df
     
-    def _load_allele_hla_seq(self):
-        with open('/data/home/yixinguo/TcellEpitope/data/raw_data/IEDB_allele_HLA.json','r') as f:
+    def _load_allele_hla_seq(self):      
+        with open(join(self.data_dir, 'IEDB_allele_HLA.json'),'r') as f:
             iedb_allele_hla_dict = json.load(f)
         # print('load success')
         # iedb_allele_hla_dict = json.loads(iedb_data)
-        with open('/data/home/yixinguo/TcellEpitope/data/raw_data/PRIME_allele_HLA.json','r') as f:
+        with open(join(self.data_dir, 'PRIME_allele_HLA.json'),'r') as f:    
             PRIME_allele_hla_dict = json.load(f)
         # PRIME_allele_hla_dict = json.loads(PRIME_data)
-        with open('/data/home/yixinguo/TcellEpitope/data/raw_data/VDJdb_allele_HLA.json','r') as f:
+        with open(join(self.data_dir, 'VDJdb_allele_HLA.json'),'r') as f:    
             VDJdb_allele_hla_dict = json.load(f)
 
         return iedb_allele_hla_dict, PRIME_allele_hla_dict, VDJdb_allele_hla_dict
+
 
     def _load_CDR3b_from_TCRdb(self, iedb_df):
         def extractAAseq(file):
@@ -222,18 +221,27 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
     
     ### select non-immunogenic epitope data from PRIME ### 
     def _process_RPIME_df(self, PRIME_df, cdr3b_healthy):
+        """ only select non-immunogenic from PRIME
         df_filter = PRIME_df[PRIME_df['Immunogenicity'] == '0']
         data_x_epitopes = df_filter['Mutant'].to_list()
         self.logger.info("Number of epitopes from PRIME: {} ({} unique).".format(len(data_x_epitopes), len(np.unique(data_x_epitopes))))
 
         ### healthy data seleect from cdr3b_TCRdb randomly ### 
+
         data_y1_CDR3 = random.sample(cdr3b_healthy, df_filter.shape[0])
         data_y2_CDR3 = random.sample(cdr3b_healthy, df_filter.shape[0])
+
         # data_y_CDR3 = [[y1, y2] for y1, y2 in zip(data_y1_CDR3, data_y2_CDR3)]
         # allele_seq_dict = self._generate_allele_seq_PRIME(df_filter)
         data_MHC_seq = df_filter['Allele'].apply(lambda x: self.PRIME_allele_hla_dict[x] if (str(x) != 'nan') else '').to_list()
         data_immunogenic = [int(i) for i in df_filter['Immunogenicity'].to_list()]
-        return [data_x_epitopes, data_MHC_seq, data_y1_CDR3, data_y2_CDR3, data_immunogenic]
+        """
+
+        # select all data
+        data_x_epitopes = PRIME_df['Mutant'].to_list()
+        data_immunogenic = [int(i) for i in PRIME_df['Immunogenicity'].to_list()]
+        self.logger.info("Number of epitopes from PRIME: {} ({} unique).".format(len(data_x_epitopes), len(np.unique(data_x_epitopes))))
+        return [data_x_epitopes, data_immunogenic]
 
     def _process_VDJdb_df(self, VDJdb_df):
         VDJdb_paired_ = VDJdb_df.iloc[:26804]
@@ -250,6 +258,7 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
 
 
     def _prepare_dataset(self, iedb_df, PRIME_df, VDJdb_df):
+        """
         original_data = self._process(iedb_df)
         # print('1:',len(original_data[0]))
         # drop duplicates 
@@ -287,10 +296,12 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         for i in range(len(iedb_processed_df)):
             iedb_processed_df[i].extend(VDJ_db_data_random[i])
         print('after:', len(iedb_processed_df[0]))
-
-
-            
+  
         dataset = EpitopeMHCTCRDataset(iedb_processed_df, tokenizer=self.tokenizer, max_seq_length=self.max_seq_length)
+        """
+        # only use PRIME dataset
+        PRIME_dataset = self._process_RPIME_df(PRIME_df, self.cdr3b_healthy)
+        dataset = EpitopeMHCTCRDataset(PRIME_dataset, tokenizer=self.tokenizer, max_seq_length=self.max_seq_length)
         return dataset
 
 

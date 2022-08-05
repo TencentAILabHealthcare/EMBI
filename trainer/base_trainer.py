@@ -95,7 +95,7 @@ class BaseTrainer:
                     self.mnt_best = log[self.mnt_metric]
                     not_improved_count = 0
                     best = True
-                    self._save_chckpoint(epoch, save_best = best)
+                    self._save_checkpoint(epoch, save_best = best)
                 else:
                     not_improved_count += 1 
                 
