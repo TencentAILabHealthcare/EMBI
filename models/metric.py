@@ -12,8 +12,8 @@ def accuracy_sample(y_pred, y_true):
         y_true (numpy.array): shape [seq_len*2, batch_size]
     """
     # y_pred = y_pred.argmax(axis=2)
-    print('y_pred:', y_pred)
-    print('y_true:', y_true)
+    # print('y_pred:', y_pred)
+    # print('y_true:', y_true)
     return metrics.accuracy_score(y_pred=y_pred, y_true=y_true, normalize=True, sample_weight=None)
 
 
@@ -38,3 +38,9 @@ def correct_count(y_pred, y_true):
         y_true (numpy.array): shape [batch_size, seq_len]
     '''
     return (y_pred == y_true).sum(), len(y_true)
+
+def correct_predictions(output_probabilities, targets):
+
+    out_classes = output_probabilities.ge(0.5).byte().float()
+    correct = (out_classes == targets).sum()
+    return correct.item()

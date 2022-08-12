@@ -56,11 +56,11 @@ class ESMTraniner(BaseTrainer):
             x_input_ids, x_attention_mask = x_input_ids.to(self.device), x_attention_mask.to(self.device)
             target = target.to(self.device)
 
-            print('target',target.shape)
+            # print('target',target.shape)
 
             output = self.model(x_input_ids, x_attention_mask)
             # output = torch.unsqueeze(output, 1)
-            print('output',output.shape)
+            # print('output',output.shape)
             # target shape: [batch_size,], output shape: [batch_size, 920, 1]
             loss = self.criterion(output, target)
             loss.backward()
@@ -156,13 +156,15 @@ class ESMTraniner(BaseTrainer):
                 output = self.model(x_input_ids, x_attention_mask)
                 loss = self.criterion(output, target)
 
-                print(loss.item())
+                print('loss.item:',loss.item())
+                # print('output test,', output)
 
                 batch_size = torch.squeeze(target).shape[0]
                 total_loss += loss.item() * batch_size
 
                 y_pred = output.cpu().detach().numpy()
                 y_pred = np.round_(y_pred)
+                # print()
                 y_true = np.squeeze(target.cpu().detach().numpy())
 
                 test_result['input'].append(x_input_ids.cpu().detach().numpy())

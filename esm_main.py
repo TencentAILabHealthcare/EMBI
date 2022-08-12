@@ -34,7 +34,6 @@ def main(config):
         test_data_loader.sampler.__len__()
     ))
 
-    # ntoken ?
     ntoken = 33
     model = config.init_obj('arch', module_arch)
 

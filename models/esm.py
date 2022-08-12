@@ -39,6 +39,7 @@ class ESM2Decoder(base_model.BaseModel):
         # print('x_attention_mask',x_attention_mask.shape)
 
         encoder_embedding = self.esm_encoder.base_model(input_ids = x_input_ids, attention_mask = x_attention_mask).last_hidden_state
+        
         output = self.decoder(encoder_embedding)
 
         # print('output_embedding shape:', output.shape)
@@ -50,7 +51,7 @@ class ESM2Decoder(base_model.BaseModel):
         # output = self.esm_encoder(input_ids = x_input_ids, attention_mask = x_attention_mask)
         # print(output.keys())
         # output = self.decoder(output)
-        print('output',output)
+        # print('output',output)
         return output
 
 
