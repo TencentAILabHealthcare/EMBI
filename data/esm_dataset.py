@@ -89,14 +89,14 @@ class EpitopeMHCTCRDataset(Dataset):
         """
         # epitope_epitope_MHC_inputs = encoded_epitope_MHC['input_ids']
         # # don't use MHC to test model
-        # epitope_epitope_MHC_inputs = torch.concat((encoded_epitope['input_ids'],encoded_MHC['input_ids']),
-        #                                 axis=1)
-        epitope_epitope_MHC_inputs = encoded_epitope['input_ids']                            
+        epitope_epitope_MHC_inputs = torch.concat((encoded_epitope['input_ids'],encoded_MHC['input_ids']),
+                                        axis=1)
+        # epitope_epitope_MHC_inputs = encoded_epitope['input_ids']                            
         
 
-        # epitope_epitope_MHC_attention_mask = torch.concat((encoded_epitope['attention_mask'],encoded_MHC['attention_mask']),
-        #                                 axis=1)
-        epitope_epitope_MHC_attention_mask = encoded_epitope['attention_mask']
+        epitope_epitope_MHC_attention_mask = torch.concat((encoded_epitope['attention_mask'],encoded_MHC['attention_mask']),
+                                        axis=1)
+        # epitope_epitope_MHC_attention_mask = encoded_epitope['attention_mask']
         # don't use MHC to test model
         # epitope_MHC_cdr3_attention_mask = torch.concat((
         #     encoded_epitope['attention_mask'], 
@@ -129,7 +129,7 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         self.tokenizer = ESMTokenizer.from_pretrained("facebook/esm-1b", do_lower_case=False, local_files_only=True)
 
         # self.iedb_df, self.PRIME_df, self.Allele_data, self.VDJdb_df = self._load_data()
-        self.epitope_BA_df = self._load_data()
+        self.epitope_BA_df, self.BA_testdata = self._load_data()
 
         # self.logger.info('IEDB, PIRME data load successfully')
         # self.iedb_allele_hla_dict, self.PRIME_allele_hla_dict, self.VDJdb_allele_hla_dict = self._load_allele_hla_seq()
@@ -142,7 +142,7 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         super().__init__(self.train_dataset, batch_size, seed, shuffle, validation_split, test_split, num_workers)
         
         ### test_dataset
-        self.test_dataset = self._prepare_testdata(self.epitope_BA_df)
+        self.test_dataset = self._prepare_testdata(self.BA_testdata)
         self.test_dataloader = DataLoader(dataset=self.test_dataset, batch_size=batch_size, shuffle=shuffle)
 
     def get_test_dataloader(self):
@@ -156,12 +156,16 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         # VDJdb_df = pd.read_csv(join(self.data_dir, 'VDJdb_paired.tsv'), dtype=str,sep='\t')
         # return iedb_df, PRIME_df, Allele_data, VDJdb_df
         Epitope_BA_df = pd.read_csv(join(self.data_dir, 'Epitope_BA_data.csv'),dtype=str)
-        return Epitope_BA_df
+        Epitope_BA_df_test = pd.read_csv(join(self.data_dir, '20220818_BA_testdata.csv'),dtype=str)
+        return Epitope_BA_df, Epitope_BA_df_test
     
     def _process_BA_df(self, Epitope_BA_df):
-        idx = list(range(Epitope_BA_df.shape[0]))
-        idx_random = random.sample(idx, 100000) 
-        Epitope_BA_df_random = Epitope_BA_df.iloc[idx_random]
+        # random choice 100000
+        # idx = list(range(Epitope_BA_df.shape[0]))
+        # idx_random = random.sample(idx, 100000) 
+        # Epitope_BA_df_random = Epitope_BA_df.iloc[idx_random]
+
+        Epitope_BA_df_random = Epitope_BA_df
         data_x_epitopes = Epitope_BA_df_random['Epitope'].to_list()
         data_MHC_pseduo_seq = Epitope_BA_df_random['HLA_pseudo_seq'].to_list()
         data_Binder = [int(i) for i in Epitope_BA_df_random['Binder'].to_list()]
@@ -283,8 +287,9 @@ class EpitopeMHCTCRDataLoader(BaseDataLoader):
         data_immunogenic = [1] * VDJdb_paired_.shape[0]
         return [data_x_epitopes, data_MHC_seq, data_y1_CDR3, data_y2_CDR3, data_immunogenic]
 
-    def _prepare_testdata(self, iedb_df):
-        original_data = self._process_BA_df(iedb_df)
+    def _prepare_testdata(self, test_df):
+        original_data = self._process_BA_df(test_df)
+
         dataset = EpitopeMHCTCRDataset(original_data, tokenizer=self.tokenizer, max_seq_length=self.max_seq_length)
         return dataset
 

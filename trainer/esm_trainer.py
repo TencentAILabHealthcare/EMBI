@@ -6,7 +6,7 @@ from numpy import Inf
 from logger.visualization import TensorboardWriter
 from .base_trainer import BaseTrainer
 from utils.utility import inf_loop, MetricTracker
-from models.metric import correct_count
+from models.metric import correct_count, calculatePR
 import numpy as np
 from os.path import join
 
@@ -57,7 +57,7 @@ class ESMTraniner(BaseTrainer):
             target = target.to(self.device)
 
             # print('target',target.shape)
-
+            self.optimizer.zero_grad()
             output = self.model(x_input_ids, x_attention_mask)
             # output = torch.unsqueeze(output, 1)
             # print('output',output.shape)
@@ -145,7 +145,7 @@ class ESMTraniner(BaseTrainer):
         self.model.eval()
         total_loss = 0.0
 
-        correct_output = {'count': 0, 'num': 0}
+        correct_output = {'count': 0, 'num': 0,'TP':0, 'TN':0,'FP':0,'FN':0}
         test_result = {'input': [], 'output':[], 'target': []}       
 
         with torch.no_grad():
@@ -156,7 +156,7 @@ class ESMTraniner(BaseTrainer):
                 output = self.model(x_input_ids, x_attention_mask)
                 loss = self.criterion(output, target)
 
-                print('loss.item:',loss.item())
+                # print('loss.item:',loss.item())
                 # print('output test,', output)
 
                 batch_size = torch.squeeze(target).shape[0]
@@ -166,6 +166,8 @@ class ESMTraniner(BaseTrainer):
                 y_pred = np.round_(y_pred)
                 # print()
                 y_true = np.squeeze(target.cpu().detach().numpy())
+                TP, FP, TN, FN = calculatePR(y_pred, y_true)
+
 
                 test_result['input'].append(x_input_ids.cpu().detach().numpy())
                 test_result['output'].append(y_pred)
@@ -174,12 +176,19 @@ class ESMTraniner(BaseTrainer):
                 correct, num = correct_count(y_pred, y_true)
                 correct_output['count'] += correct
                 correct_output['num'] += num
+                correct_output['FP'] += FP
+                correct_output['TP'] += FP
+                correct_output['FN'] += FP
+                correct_output['FN'] += FP
         with open(join(self.config._save_dir, 'test_result.pkl'),'wb') as f:
             pickle.dump(test_result, f)
 
         test_output = {'n_samples': len(self.test_data_loader.sampler),
                        'total_loss': total_loss,
-                       'accuracy': correct_output['count'] / correct_output['num']}
+                       'accuracy': correct_output['count'] / correct_output['num'],
+                       'precision': correct_output['TP'] / (correct_output['TP'] + correct_output['FP']),
+                       'recall': correct_output['TP'] / (correct_output['TP'] + correct_output['FN'])
+                       }
         return test_output                       
 
     def _progress(self, batch_idx):

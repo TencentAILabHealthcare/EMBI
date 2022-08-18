@@ -60,7 +60,7 @@ def main(config):
                       valid_data_loader=valid_data_loader,
                       test_data_loader=test_data_loader,
                       lr_scheduler=lr_scheduler)
-    trainer.train()
+    # trainer.train()
 
     """Test."""
     logger = config.get_logger('test')
@@ -68,15 +68,20 @@ def main(config):
     test_metrics = [getattr(module_metric, met) for met in config['metrics']]
 
     # load best checkpoint
-    resume = str(config.save_dir / 'model_best.pth')
+    # resume = str(config.save_dir / 'model_best.pth')
     # resume = '../Result/checkpoints/ESM-Debug/0805_165059/model_best.pth'
+    resume = config.resume
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
     model.load_state_dict(state_dict)
 
     test_output = trainer.test()
-    log={'total_accuracy': test_output['accuracy']}
+    log={
+        'total_accuracy': test_output['accuracy'],
+        'precision':test_output['precision'],
+        'recall': test_output['recall']
+    }
     logger.info(log)
 
 if __name__ == '__main__':

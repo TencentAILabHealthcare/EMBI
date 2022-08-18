@@ -14,7 +14,7 @@
         "type": "EpitopeMHCTCRDataLoader",
         "args":{
             "data_dir": "./data/raw_data/",
-            "batch_size": 500,
+            "batch_size": 1024,
             "seed": 0,
             "validation_split": 0.1,
             "test_split": 0.0,
@@ -28,7 +28,7 @@
         "type": "AdamW",
         "args":{
             "lr": 0.0001,
-            "weight_decay": 0
+            "weight_decay": 0.1
         }
     },
     "loss": "BCELoss",
@@ -50,7 +50,7 @@
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 5,
+        "early_stop": 7,
 
         "tensorboard": true
     }

@@ -44,3 +44,15 @@ def correct_predictions(output_probabilities, targets):
     out_classes = output_probabilities.ge(0.5).byte().float()
     correct = (out_classes == targets).sum()
     return correct.item()
+
+
+def calculatePR(y_pred, y_true):
+    y_pred = np.array(y_pred)
+    y_true = np.array(y_true)
+    TP = np.sum(np.logical_and(np.equal(y_true, 1), np.equal(y_pred, 1)))
+    FP = np.sum(np.logical_and(np.equal(y_true, 0), np.equal(y_pred, 1)))
+    TN = np.sum(np.logical_and(np.equal(y_true, 0), np.equal(y_pred, 0)))
+    FN = np.sum(np.logical_and(np.equal(y_true, 1), np.equal(y_pred, 0)))
+    # precision = TP/(TP+FP)
+    # recall = TP/(TP+FN)
+    return TP, FP, TN, FN   
