@@ -67,7 +67,13 @@ class MLPDataLoader(BaseDataLoader):
         return self.test_dataloader
 
     def _load_data(self):
-        Epitope_BA_df = pd.read_csv(join(self.data_dir, 'Epitope_BA_data.csv'),dtype=str)
+        # change dataset here
+        # Epitope_BA_df = pd.read_csv(join(self.data_dir, 'Epitope_BA_data.csv'),dtype=str)
+        # test data
+        # Epitope_BA_df = pd.read_csv(join(self.data_dir, 'PRIME_data_for_benchmark.csv'),dtype=str)
+        Epitope_BA_df = pd.read_csv(join(self.data_dir, '20220825benchmark_data_from_DeepNetBim.csv'),dtype=str)
+
+      
         self.logger.info('Binding affinity data ...')
         return Epitope_BA_df
 
