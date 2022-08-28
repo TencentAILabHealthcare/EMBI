@@ -86,7 +86,7 @@ def main(config):
         recall,
         roc_auc(list(test_result_df['y_pred']), list(test_result_df['y_true']))
     ))
-    test_result_df.to_csv(join(config.save_dir, '20220825_EMBert_DeepNetBim_benchmark_test_result.csv'), index=False)
+    test_result_df.to_csv(join(config.save_dir, '20220825_EMBert_CD8_1_500_benchmark_test_result.csv'), index=False)
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='PyTorch Template')

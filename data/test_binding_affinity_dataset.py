@@ -27,7 +27,7 @@ class EpitopeMHCDataset(object):
         self.rng = np.random.default_rng(seed=self.seed)
         self.pos_df, self.neg_df = self._load_data()
         self.logger.info("Load ESM-1b ...")
-        self.tokenizer = ESMTokenizer.from_pretrained("facebook/esm-1b", do_lower_case=False, local_files_only=False)
+        self.tokenizer = ESMTokenizer.from_pretrained("facebook/esm-1b", do_lower_case=False, local_files_only=True)
 
         # '''Get tokenizer'''
         # self.logger.info('Creating tokenizer...')
@@ -37,7 +37,7 @@ class EpitopeMHCDataset(object):
 
         # Epitope_BA_df_test = pd.read_csv(join(self.data_dir, '20220821CD8_benchmark_data_1_500.csv'),dtype=str)
         # Epitope_BA_df_test = pd.read_csv(join(self.data_dir, 'PRIME_data_for_benchmark.csv'),dtype=str)
-        Epitope_BA_df_test = pd.read_csv(join(self.data_dir, '20220825benchmark_data_from_DeepNetBim.csv'),dtype=str)
+        Epitope_BA_df_test = pd.read_csv(join(self.data_dir, '20220821CD8_benchmark_data_1_500.csv'),dtype=str)
 
 
         Epitope_BA_df_test = Epitope_BA_df_test[['Epitope','Allele','Binder','HLA_pseudo_seq']]

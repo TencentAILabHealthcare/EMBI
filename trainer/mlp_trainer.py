@@ -7,7 +7,8 @@ import torch
 import pickle
 from os.path import join
 import numpy as np
-from models.metric import correct_count
+from models.metric import correct_count, calculatePR, roc_auc
+import pandas as pd
 
 
 
@@ -143,7 +144,8 @@ class MLPTrainer(BaseTrainer):
         total_loss = 0.0
 
         correct_output = {'count': 0, 'num': 0}
-        test_result = {'input': [], 'output':[], 'target': []}       
+        test_result = {'y_true': [], 'y_pred': [],'y_pred_r':[]}
+
 
         with torch.no_grad():
             for batch_idx, (x_input_ids, target) in enumerate(self.test_data_loader):
@@ -160,23 +162,35 @@ class MLPTrainer(BaseTrainer):
                 total_loss += loss.item() * batch_size
 
                 y_pred = output.cpu().detach().numpy()
-                y_pred = np.round_(y_pred)
+                y_pred_r = np.round_(y_pred)
                 # print()
                 y_true = np.squeeze(target.cpu().detach().numpy())
 
-                test_result['input'].append(x_input_ids.cpu().detach().numpy())
-                test_result['output'].append(y_pred)
-                test_result['target'].append(y_true)
+                test_result['y_true'].append(y_true)
+                test_result['y_pred'].append(y_pred)
+                test_result['y_pred_r'].append(y_pred_r)
 
-                correct, num = correct_count(y_pred, y_true)
+                correct, num = correct_count(y_pred_r, y_true)
                 correct_output['count'] += correct
                 correct_output['num'] += num
+    
+        y_pred = np.concatenate(test_result['y_pred'])
+        y_true = np.concatenate(test_result['y_true'])
+        y_pred_r = np.concatenate(test_result['y_pred_r'])
+
+        test_result_df = pd.DataFrame({'y_pred': list(y_pred.flatten()),
+                                'y_true': list(y_true.flatten()),
+                                   'y_pred_r': list(y_pred_r.flatten())})
+        precision, recall = calculatePR(test_result_df['y_pred_r'].to_list(), test_result_df['y_true'].to_list())
         with open(join(self.config._save_dir, 'test_result.pkl'),'wb') as f:
             pickle.dump(test_result, f)
 
         test_output = {'n_samples': len(self.test_data_loader.sampler),
                        'total_loss': total_loss,
-                       'accuracy': correct_output['count'] / correct_output['num']}
+                       'accuracy': correct_output['count'] / correct_output['num'],
+                       'precision':precision,
+                       'recall':recall,
+                       'roc_auc': roc_auc(y_pred=test_result_df['y_pred'].to_list(), y_true=test_result_df['y_true'].to_list())}
         return test_output                       
 
     def _progress(self, batch_idx):

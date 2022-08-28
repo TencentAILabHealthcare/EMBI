@@ -137,7 +137,7 @@ class EpitopeMHCBertDataLoader(BaseDataLoader):
             tokenizer_dir=self.MHC_tokenizer_dir
         )
         # self.iedb_df, self.PRIME_df, self.Allele_data, self.VDJdb_df = self._load_data()
-        self.epitope_BA_df, self.test_dataset = self._load_data()
+        self.epitope_BA_df, self.test_df = self._load_data()
 
         # self.logger.info('IEDB, PIRME data load successfully')
         # self.iedb_allele_hla_dict, self.PRIME_allele_hla_dict, self.VDJdb_allele_hla_dict = self._load_allele_hla_seq()
@@ -150,7 +150,7 @@ class EpitopeMHCBertDataLoader(BaseDataLoader):
         super().__init__(self.train_dataset, batch_size, seed, shuffle, validation_split, test_split, num_workers)
         
         ### test_dataset
-        # self.test_dataset = self.test_df
+        self.test_dataset = self._prepare_dataset(self.test_df)
         self.test_dataloader = DataLoader(dataset=self.test_dataset, batch_size=batch_size, shuffle=shuffle)
 
     def get_test_dataloader(self):
@@ -159,7 +159,7 @@ class EpitopeMHCBertDataLoader(BaseDataLoader):
 
     def _load_data(self):
         Epitope_BA_df = pd.read_csv(join(self.data_dir, 'Epitope_BA_data.csv'),dtype=str)
-        test_df = pd.read_csv(join(self.data_dir, '20220825benchmark_data_from_DeepNetBim.csv'),dtype=str)
+        test_df = pd.read_csv(join(self.data_dir, '20220821CD8_benchmark_data_1_500.csv'),dtype=str)
         return Epitope_BA_df, test_df
     
     def _process_BA_df(self, Epitope_BA_df):
