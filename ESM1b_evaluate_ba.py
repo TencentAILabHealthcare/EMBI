@@ -9,10 +9,10 @@ import collections
 import torch
 import numpy as np
 import pandas as pd
-from os.path import join
+from os.path import join, basename
 
-import data.mlp_dataset as module_data
-import models.mlp as module_arch
+import data.test_ba_dataset_esm1b as module_data
+import models.esm as module_arch
 from models.metric import calculatePR, correct_count, roc_auc
 from parse_config import ConfigParser
 
@@ -30,7 +30,7 @@ def main(config):
     # setup data_loader instances
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
-    binding_affinity_dataloader = data_loader.get_test_dataloader()
+    binding_affinity_dataloader = data_loader.get_binding_affinitiy_dataset()
 
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
@@ -51,11 +51,11 @@ def main(config):
     result_dict = {'y_true': [], 'y_pred': [],'y_pred_r':[]}
     correct_output = {'count': 0, 'num': 0}
     with torch.no_grad():
-        for batch_idx, (x_input_ids,  target) in enumerate(binding_affinity_dataloader):
-            x_input_ids = x_input_ids.to("cuda")
+        for batch_idx, (x_input_ids, x_attention_mask, target) in enumerate(binding_affinity_dataloader):
+            x_input_ids, x_attention_mask = x_input_ids.to("cuda"), x_attention_mask.to("cuda")
             target = target.to("cuda")
 
-            output = model(x_input_ids)
+            output = model(x_input_ids, x_attention_mask)
             # print('loss.item:',loss.item())
             # print('output test,', output)
             y_pred = output.cpu().detach().numpy()
@@ -85,7 +85,8 @@ def main(config):
         recall,
         roc_auc(list(test_result_df['y_pred']), list(test_result_df['y_true']))
     ))
-    test_result_df.to_csv(join(config.save_dir, '20220825_mlp_DeepNetBim_benchmark_test_result.csv'), index=False)
+    test_result_df.to_csv(join(config.save_dir, config['data_loader']['args']['test_file'].replace(".txt",'_ESM1b_result.txt')), index=False)
+    
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='PyTorch Template')
@@ -102,7 +103,9 @@ if __name__ == '__main__':
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
-        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size')
+        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
+        CustomArgs(['--s', '--seed'], type=int, target='data_loader;args;seed'),
+        CustomArgs(['--tf', '--test_file'], type=str, target='data_loader;args;test_file')
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

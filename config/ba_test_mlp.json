@@ -1,5 +1,5 @@
 {
-    "name": "ESM-MLP-test-binding-affinity-CD8-benchmark",
+    "name": "MLP-test-binding-affinity",
     "n_gpu": 1,
 
     "arch": {
@@ -15,7 +15,9 @@
         "args":{
             "data_dir": "./data/raw_data/",
             "batch_size": 1024,
-            "seed": 0
+            "seed": 0,
+            "test_file":"",
+            "use_part":10000
         }
     },
     "optimizer": {

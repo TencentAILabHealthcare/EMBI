@@ -6,6 +6,8 @@ import pandas as pd
 from os.path import join
 import random
 import numpy as np
+from utils.utility import encode_24, encode_24_blosum50, encode_seq, encode_seq_blosum50
+
 # import blosum as bl
 
 
@@ -105,11 +107,11 @@ class MLPDataLoader(BaseDataLoader):
         # Epitope_BA_df_random = Epitope_BA_df[Epitope_BA_df.Allele.str.startswith('HL')]
         Epitope_BA_df_random = Epitope_BA_df
 
-        data_x_epitopes_onehot = [self._encode_24(i) for i in Epitope_BA_df_random['Epitope'].to_list()]
-        data_x_epitopes_blosum50 = [self._encode_24_blosum50(i) for i in Epitope_BA_df_random['Epitope'].to_list()]
+        data_x_epitopes_onehot = [encode_24(i) for i in Epitope_BA_df_random['Epitope'].to_list()]
+        data_x_epitopes_blosum50 = [encode_24_blosum50(i, self.blosum50_dict) for i in Epitope_BA_df_random['Epitope'].to_list()]
 
-        data_MHC_pseduo_seq_onehot = [self._encode_seq(i) for i in Epitope_BA_df_random['HLA_pseudo_seq'].to_list()]
-        data_MHC_pseduo_seq_blosum50 = [self._encode_seq_blosum50(i) for i in Epitope_BA_df_random['HLA_pseudo_seq'].to_list()]
+        data_MHC_pseduo_seq_onehot = [encode_seq(i) for i in Epitope_BA_df_random['HLA_pseudo_seq'].to_list()]
+        data_MHC_pseduo_seq_blosum50 = [encode_seq_blosum50(i, self.blosum50_dict) for i in Epitope_BA_df_random['HLA_pseudo_seq'].to_list()]
 
         # MHC allele name one_hot enconding
         # data_MHC_allele_onehot = pd.get_dummies(Epitope_BA_df_random.Allele, prefix='Allele').to_numpy().tolist()
@@ -125,48 +127,6 @@ class MLPDataLoader(BaseDataLoader):
         idx_random = random.sample(idx, num)
         df_random = df.iloc[idx_random]
         return df_random
-
-    def _encode_seq(self, sequence):
-        alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
-        char_to_int = dict((c, i) for i, c in enumerate(alphabet))
-        integer_encoded = [char_to_int[char] for char in sequence]
-        onehot_encoded = list()
-
-        for value in integer_encoded:
-            letter = [0 for _ in range(len(alphabet))]
-            letter[value] = 1
-            onehot_encoded.append(letter)
-
-        return np.array(onehot_encoded)  
-
-    def _encode_24(self, seq):
-        left = self._encode_seq(seq[:12])
-        right = self._encode_seq(seq[-12:])
-        if len(seq) < 12:
-            middle = np.zeros((24-len(seq) * 2, 20), dtype='int32')
-            merge = np.concatenate((left, middle, right), axis=0)
-        else:
-            merge = np.concatenate((left, right), axis=0)
-        return merge   
-
-    def _encode_24_blosum50(self, seq):
-        left = self._encode_seq_blosum50(seq[:12])
-        right = self._encode_seq_blosum50(seq[-12:])
-        if len(seq) < 12:
-            middle = np.zeros((24-len(seq) * 2, 20), dtype='int32')
-            merge = np.concatenate((left, middle, right), axis=0)
-        else:
-            merge = np.concatenate((left, right), axis=0)
-        return merge
-    
-    def _encode_seq_blosum50(self, seq):
-        alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
-        result = np.zeros((len(seq), len(alphabet)), dtype='int32')
-        for i,s in enumerate(list(seq)):
-            for j, a in enumerate(alphabet):
-                blosum50 = self.blosum50_dict[s+a]
-                result[i][j] = blosum50
-        return result
 
     def _prepare_dataset(self, epitope_BA_df):
         epitope_onehot, epitope_BLOSUM50, MHC_onehot, MHC_blosum50, binder  = self._process_BA_df(epitope_BA_df)

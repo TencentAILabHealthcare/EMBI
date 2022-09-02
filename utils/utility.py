@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 from itertools import repeat
 from collections import OrderedDict
+import numpy as np
 
 
 def ensure_dir(dirname):
@@ -45,8 +46,50 @@ def prepare_device(n_gpu_use):
     list_ids = list(range(n_gpu_use))
     return device, list_ids
 
+def encode_seq(sequence):
+    alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    char_to_int = dict((c, i) for i, c in enumerate(alphabet))
+    integer_encoded = [char_to_int[char] for char in sequence]
+    onehot_encoded = list()
+
+    for value in integer_encoded:
+        letter = [0 for _ in range(len(alphabet))]
+        letter[value] = 1
+        onehot_encoded.append(letter)
+
+    return np.array(onehot_encoded)  
+
+def encode_24(seq):
+    left = encode_seq(seq[:12])
+    right = encode_seq(seq[-12:])
+    if len(seq) < 12:
+        middle = np.zeros((24-len(seq) * 2, 20), dtype='int32')
+        merge = np.concatenate((left, middle, right), axis=0)
+    else:
+        merge = np.concatenate((left, right), axis=0)
+    return merge   
+
+def encode_24_blosum50(seq, blosum50_dict):
+    left = encode_seq_blosum50(seq[:12], blosum50_dict)
+    right = encode_seq_blosum50(seq[-12:],blosum50_dict)
+    if len(seq) < 12:
+        middle = np.zeros((24-len(seq) * 2, 20), dtype='int32')
+        merge = np.concatenate((left, middle, right), axis=0)
+    else:
+        merge = np.concatenate((left, right), axis=0)
+    return merge
+
+def encode_seq_blosum50(seq, blosum50_dict):
+    alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    result = np.zeros((len(seq), len(alphabet)), dtype='int32')
+    for i,s in enumerate(list(seq)):
+        for j, a in enumerate(alphabet):
+            blosum50 = blosum50_dict[s+a]
+            result[i][j] = blosum50
+    return result
+
 class MetricTracker:
-    def __init__(self, *keys, writer=None):
+    def __init__(*keys, writer=None):
         self.writer = writer
         self._data = pd.DataFrame(index=keys, columns=['total', 'counts', 'average'])
         self.reset()
@@ -55,14 +98,14 @@ class MetricTracker:
         for col in self._data.columns:
             self._data[col].values[:] = 0
 
-    def update(self, key, value, n=1):
+    def update(key, value, n=1):
         if self.writer is not None:
             self.writer.add_scalar(key, value)
         self._data.total[key] += value * n
         self._data.counts[key] += n
         self._data.average[key] = self._data.total[key] / self._data.counts[key]
 
-    def avg(self, key):
+    def avg(key):
         return self._data.average[key]
 
     def result(self):

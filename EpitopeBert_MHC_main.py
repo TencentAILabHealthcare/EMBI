@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import data.EpitopeBert_MHC_dataset as module_data
+import TcellEpitope.data.EpitopeBert_MHC_ba_dataset as module_data
 import models.epitopebert_mhc as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
