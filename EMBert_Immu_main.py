@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import data.EMBert_ba_dataset as module_data
+import data.EMBert_immu_dataset as module_data
 import models.epitope_mhc_bert as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
@@ -25,7 +25,7 @@ def main(config):
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_dataset(valid=True)
-    test_data_loader = data_loader.get_test_dataloader()
+    test_data_loader = data_loader.split_dataset(test=True)
 
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
@@ -39,6 +39,21 @@ def main(config):
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]   
+
+    ## freeze layer
+
+    for param in model.EpitopeBert.base_model.embeddings.parameters():
+        param.requires_grad = False
+    for param in model.MHCBert.base_model.embeddings.parameters():
+        param.requires_grad = False
+
+    freeze_top_layers = config['freeze_top']
+    logger.info('Freeze the embeeding layers and top {} encoders of EpitopeBert'.format(freeze_top_layers))
+    for param in model.EpitopeBert.base_model.encoder.layer[0: freeze_top_layers+1].parameters():
+        param.requires_grad = False
+    logger.info('Freeze the embeeding layers and top {} encoders of MHCBert'.format(freeze_top_layers))
+    for param in model.MHCBert.base_model.encoder.layer[0: freeze_top_layers+1].parameters():
+        param.requires_grad = False 
     logger.info(model)
 
     trainable_params = model.parameters()

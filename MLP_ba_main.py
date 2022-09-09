@@ -1,11 +1,10 @@
 import torch
 import numpy as np
-import data.mlp_dataset as module_data
+import data.MLP_ba_dataset as module_data
 import models.mlp as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
 
-import transformers
 from trainer.mlp_trainer import MLPTrainer as Trainer
 import argparse
 import collections
@@ -27,7 +26,7 @@ def main(config):
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_dataset(valid=True)
 
-    test_data_loader = data_loader.get_test_dataloader()
+    test_data_loader = data_loader.split_dataset(test=True)
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
         valid_data_loader.sampler.__len__(),
@@ -67,7 +66,12 @@ def main(config):
     model.load_state_dict(state_dict)
 
     test_output = trainer.test()
-    log={'total_accuracy': test_output['accuracy']}
+    log={
+        'total_accuracy': test_output['accuracy'],
+        'precision':test_output['precision'],
+        'recall': test_output['recall'],
+        'roc_auc': test_output['roc_auc']
+    }
     logger.info(log) 
 
 if __name__ == '__main__':
@@ -83,7 +87,10 @@ if __name__ == '__main__':
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
-        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size')
+        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
+        # CustomArgs(['--d', '--dropout'], type=float, target='arch;args;dropout'),
+        CustomArgs(['--tdf', '--training_data_file'], type=str, target='data_loader;args;training_data_file')
+
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

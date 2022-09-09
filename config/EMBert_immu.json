@@ -1,5 +1,5 @@
 {
-    "name": "Epitope-MHC-Debug",
+    "name": "EMBert-Immu-Debug",
     "n_gpu": 1,
 
     "arch": {
@@ -11,7 +11,7 @@
             "dropout":0.5
         }
     },
-
+    "freeze_top":4,
     "data_loader": {
         "type": "EpitopeMHCBertDataLoader",
         "args":{
@@ -19,7 +19,7 @@
             "batch_size": 1024,
             "seed": 0,
             "validation_split": 0.1,
-            "test_split": 0.0,
+            "test_split": 0.2,
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
             "shuffle":true,
