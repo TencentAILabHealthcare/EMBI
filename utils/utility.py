@@ -88,6 +88,14 @@ def encode_seq_blosum50(seq, blosum50_dict):
             result[i][j] = blosum50
     return result
 
+def getMHCSeqDict():
+    MHC_pesudo_seq = pd.read_csv('/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Data/NetMHCpan_train/MHC_pseudo.dat', 
+                                header=None, sep = '\s+')
+    MHC_pesudo_seq.columns = ['HLA','Seq']
+    MHC_pesudo_seq = MHC_pesudo_seq.drop_duplicates()
+    MHC_pesudo_seq_dict = dict(zip(MHC_pesudo_seq.HLA.to_list(), MHC_pesudo_seq.Seq.to_list()))
+    return MHC_pesudo_seq_dict
+
 class MetricTracker:
     def __init__(self, *keys, writer=None):
         self.writer = writer

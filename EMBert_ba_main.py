@@ -39,6 +39,23 @@ def main(config):
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]   
+    ## freeze layer
+
+    if config['freeze_embedding']:
+        print('freeze embedding')
+        for param in model.EpitopeBert.base_model.embeddings.parameters():
+            param.requires_grad = False
+        for param in model.MHCBert.base_model.embeddings.parameters():
+            param.requires_grad = False
+
+    freeze_top_layers = config['freeze_top']
+    logger.info('Freeze the embeeding layers and top {} encoders of EpitopeBert'.format(freeze_top_layers))
+    for param in model.EpitopeBert.base_model.encoder.layer[0: freeze_top_layers+1].parameters():
+        param.requires_grad = False
+    logger.info('Freeze the embeeding layers and top {} encoders of MHCBert'.format(freeze_top_layers))
+    for param in model.MHCBert.base_model.encoder.layer[0: freeze_top_layers+1].parameters():
+        param.requires_grad = False 
+
     logger.info(model)
 
     trainable_params = model.parameters()
@@ -90,7 +107,8 @@ if __name__ == '__main__':
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
         CustomArgs(['--d', '--dropout'], type=float, target='arch;args;dropout'),
-        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay')
+        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay'),
+        CustomArgs(['--ft', '--freeze_top'], type=int, target='freeze_top')
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

@@ -27,6 +27,7 @@ def main(config):
     valid_data_loader = data_loader.split_dataset(valid=True)
     test_data_loader = data_loader.get_test_dataloader()
 
+    
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
         valid_data_loader.sampler.__len__(),

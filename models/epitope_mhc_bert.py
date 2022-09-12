@@ -3,7 +3,7 @@ import torch.nn as nn
 from transformers import BertModel
 
 class EpitopeMHCBert(nn.Module):
-    def __init__(self, EpitopeBert_dir, MHCBert_dir, emb_dim, dropout):
+    def __init__(self, EpitopeBert_dir, MHCBert_dir, emb_dim,dropout):
         super().__init__()
         self.EpitopeBert = BertModel.from_pretrained(EpitopeBert_dir)
         self.MHCBert = BertModel.from_pretrained(MHCBert_dir)

@@ -1,5 +1,5 @@
 {
-    "name": "Epitope-MHC-Debug",
+    "name": "EMBert-Predict-test",
     "n_gpu": 1,
 
     "arch": {
@@ -8,7 +8,7 @@
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "emb_dim": 768,
-            "dropout":0.5
+            "dropout":0.7
         }
     },
 
@@ -17,13 +17,10 @@
         "args":{
             "data_dir": "./data/raw_data/",
             "batch_size": 1024,
-            "seed": 0,
-            "validation_split": 0.1,
-            "test_split": 0.0,
+            "seed": 10,
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
             "shuffle":true,
-            "num_workers":1,
             "epitope_tokenizer_dir":"/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHC_tokenizer_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "epitope_max_seq_length": 20,
@@ -57,7 +54,7 @@
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 7,
+        "early_stop": 10,
 
         "tensorboard": true
     }
