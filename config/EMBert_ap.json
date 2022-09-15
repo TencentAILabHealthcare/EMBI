@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Pre-Debug",
+    "name": "EMBert-AP-Data-Augmentation",
     "n_gpu": 1,
 
     "arch": {
@@ -7,7 +7,8 @@
         "args": {
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
-            "emb_dim": 768
+            "emb_dim": 768,
+            "dropout":""
         }
     },
 

@@ -28,6 +28,7 @@
             "MHC_tokenizer_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "epitope_max_seq_length": 20,
             "MHC_max_seq_length":34
+
         }
     },
 

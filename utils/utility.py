@@ -7,6 +7,8 @@ from pathlib import Path
 from itertools import repeat
 from collections import OrderedDict
 import numpy as np
+import time
+from functools import wraps
 
 
 def ensure_dir(dirname):
@@ -95,6 +97,17 @@ def getMHCSeqDict():
     MHC_pesudo_seq = MHC_pesudo_seq.drop_duplicates()
     MHC_pesudo_seq_dict = dict(zip(MHC_pesudo_seq.HLA.to_list(), MHC_pesudo_seq.Seq.to_list()))
     return MHC_pesudo_seq_dict
+
+def timefn(fn):
+    '''compute time cost'''
+    @wraps(fn)
+    def measure_time(*args, **kwargs):
+        t1 = time.time()
+        result = fn(*args, **kwargs)
+        t2 = time.time()
+        print(f"@timefn: {fn.__name__} took {t2 - t1: .5f} s")
+        return result
+    return measure_time
 
 class MetricTracker:
     def __init__(self, *keys, writer=None):

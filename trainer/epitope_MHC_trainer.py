@@ -153,7 +153,6 @@ class EpitopeMHCTraniner(BaseTrainer):
 
                 output = self.model(epitope_tokenized, MHC_tokenized)
                 loss = self.criterion(output, target)
-
                 # print('loss.item:',loss.item())
                 # print('output test,', output)
 

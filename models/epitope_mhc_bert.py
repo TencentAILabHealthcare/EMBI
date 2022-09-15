@@ -3,16 +3,23 @@ import torch.nn as nn
 from transformers import BertModel
 
 class EpitopeMHCBert(nn.Module):
-    def __init__(self, EpitopeBert_dir, MHCBert_dir, emb_dim,dropout):
+    def __init__(self, EpitopeBert_dir, MHCBert_dir, emb_dim, dropout):
         super().__init__()
         self.EpitopeBert = BertModel.from_pretrained(EpitopeBert_dir)
         self.MHCBert = BertModel.from_pretrained(MHCBert_dir)
-        self.decoder = nn.Sequential(
-            nn.Linear(in_features=emb_dim*2, out_features=emb_dim),
-            nn.ReLU(),
-            nn.Dropout(p=dropout),
-            nn.Linear(in_features=emb_dim, out_features=1), 
-        )
+        if dropout == "":
+            self.decoder = nn.Sequential(
+                nn.Linear(in_features=emb_dim*2, out_features=emb_dim),
+                nn.ReLU(),
+                nn.Linear(in_features=emb_dim, out_features=1), 
+            )
+        else:
+            self.decoder = nn.Sequential(
+                nn.Linear(in_features=emb_dim*2, out_features=emb_dim),
+                nn.ReLU(),
+                nn.Dropout(p=dropout),
+                nn.Linear(in_features=emb_dim, out_features=1), 
+            )
         self.activation = nn.Sigmoid()
 
 

@@ -22,15 +22,18 @@ class ConfigParser:
         # load config file and apply modification 
         self._config = _update_config(config, modification)
         self.resume = resume
+        self.run_id = run_id
 
         # set save_dir where trained model and log will be saved.
         save_dir = Path(self.config['trainer']['save_dir'])    
 
         exper_name = Path(self.config['name'])
-        if run_id is None: # use timestamp as default run-id
-            run_id = datetime.now().strftime(r'%m%d_%H%M%S')
-        self._save_dir = save_dir / 'checkpoints' / exper_name / run_id
-        self._log_dir = save_dir / 'datasplit' / exper_name / run_id      
+        if self.run_id is None: # use timestamp as default run-id
+            self.run_id = datetime.now().strftime(r'%m%d_%H%M%S')
+
+        self._save_dir = save_dir / 'checkpoints' / exper_name / self.run_id
+        self._log_dir = save_dir / 'datasplit' / exper_name / self.run_id  
+        print('save_dir',self._save_dir)    
 
         # make directory for saving checkpoints and log.
         exist_ok = run_id == ''
@@ -60,6 +63,12 @@ class ConfigParser:
 
         if args.device is not None:
             os.environ['CUDA_VISIBLE_DEVICES'] = args.device
+            
+        if args.run_id is not None:
+            run_id = args.run_id
+        else:
+            run_id = None
+            
         if args.resume is not None:
             resume = Path(args.resume)
             cfg_fname = resume.parent / 'config.json'
@@ -75,7 +84,7 @@ class ConfigParser:
 
         # parse custom cli options into dictionary
         modification = {opt.target : getattr(args, _get_opt_name(opt.flags)) for opt in options}
-        return cls(config, resume, modification)    
+        return cls(config, resume, modification, run_id)    
 
     def init_obj(self, name, module, *args, **kwargs):
         """

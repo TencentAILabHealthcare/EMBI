@@ -105,13 +105,17 @@ if __name__ == '__main__':
                       help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str,
                       help='indices of GPUs to enable (default: all)')
+    args.add_argument('-rid', '--run_id', default=None, type=str,
+                      help='run id (default:None)')
+    
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
-        CustomArgs(['--s', '--seed'], type=int, target='data_loader;args;seed')
+        CustomArgs(['--s', '--seed'], type=int, target='data_loader;args;seed'),
+        CustomArgs(['--pf', '--predict_file'], type=str, target='data_loader;args;predict_file')
     ]
     config = ConfigParser.from_args(args, options)
     main(config)
