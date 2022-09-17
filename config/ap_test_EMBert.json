@@ -7,7 +7,8 @@
         "args": {
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
-            "emb_dim": 768
+            "emb_dim": 768,
+            "dropout":""
         }
     },
 
@@ -17,7 +18,7 @@
             "data_dir": "./data/raw_data/",
             "batch_size": 1024,
             "seed": 10,
-            "use_part":10000,
+            "use_part":"",
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
             "shuffle":true,

@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Predict-Immu-test/BA_AP",
+    "name": "EMBert-Predict-Immu-test/All_epitope_without_PRIME",
     "n_gpu": 1,
 
     "arch": {
@@ -8,7 +8,7 @@
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "emb_dim": 768,
-            "dropout":0
+            "dropout":""
         }
     },
     "freeze_top":2,

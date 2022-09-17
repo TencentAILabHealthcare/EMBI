@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Immu-Debug",
+    "name": "EMBert-Immu-Data-test/Data_augmentation",
     "n_gpu": 1,
 
     "arch": {
@@ -8,10 +8,10 @@
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "emb_dim": 768,
-            "dropout":0.5
+            "dropout":""
         }
     },
-    "freeze_top":4,
+    "freeze_top":2,
     "data_loader": {
         "type": "EpitopeMHCBertDataLoader",
         "args":{
@@ -19,7 +19,7 @@
             "batch_size": 1024,
             "seed": 0,
             "validation_split": 0.1,
-            "test_split": 0.2,
+            "test_split": 0.0,
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
             "shuffle":true,

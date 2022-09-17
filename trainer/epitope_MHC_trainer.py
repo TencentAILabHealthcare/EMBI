@@ -179,8 +179,13 @@ class EpitopeMHCTraniner(BaseTrainer):
         test_result_df = pd.DataFrame({'y_pred': list(y_pred.flatten()),
                                         'y_true': list(y_true.flatten()),
                                         'y_pred_r': list(y_pred_r.flatten())})
+
+        test_result_df.to_csv(join(self.config._save_dir, 'testdata_predict.csv'), index=False)
+        
         precision, recall = calculatePR(test_result_df['y_pred_r'].to_list(), test_result_df['y_true'].to_list())
-        auc = roc_auc(list(test_result_df['y_pred']), list(test_result_df['y_true']))                             
+
+        auc = roc_auc(list(test_result_df['y_pred']), list(test_result_df['y_true']))    
+
         with open(join(self.config._save_dir, 'test_result.pkl'),'wb') as f:
             pickle.dump(test_result, f)
 

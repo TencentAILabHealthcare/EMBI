@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Predict-AP-test/BA_AP",
+    "name": "EMBert-Predict-AP-test",
     "n_gpu": 1,
     "arch": {
         "type": "EpitopeMHCBert",

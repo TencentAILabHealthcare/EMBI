@@ -25,7 +25,9 @@ def main(config):
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_dataset(valid=True)
-    test_data_loader = data_loader.split_dataset(test=True)
+    test_data_loader = data_loader.get_test_dataloader()
+    # test_data_loader = data_loader.split_dataset(test=True)
+
 
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
@@ -98,6 +100,8 @@ if __name__ == '__main__':
                       help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str,
                       help='indices of GPUs to enable (default: all)')
+    args.add_argument('-rid', '--run_id', default=None, type=str,
+                      help='run id (default:None)')
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
