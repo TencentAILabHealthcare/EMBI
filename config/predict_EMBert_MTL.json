@@ -1,8 +1,8 @@
 {
-    "name": "EMBert-Predict-AP-test/MTL/BA_specific",
+    "name": "EMBert-MTL/AP_predict",
     "n_gpu": 1,
     "arch": {
-        "type": "EpitopeMHCBert",
+        "type": "EpitopeMHCBertMTL",
         "args": {
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
@@ -12,13 +12,13 @@
     },
 
     "data_loader": {
-        "type": "EpitopeMHCBertDataLoader",
+        "type": "EpitopeMHCBertMTLDataLoader",
         "args":{
             "data_dir": "./data/raw_data/",
             "batch_size": 16384,
-            "seed": 10,
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
+            "seed":10,
             "shuffle":true,
             "epitope_tokenizer_dir":"/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHC_tokenizer_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",

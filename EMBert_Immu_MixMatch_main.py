@@ -27,6 +27,7 @@ def main(config):
     valid_data_loader = data_loader.split_dataset(valid=True)
     test_data_loader = data_loader.get_test_dataloader()
     # test_data_loader = data_loader.split_dataset(test=True)
+    unlabeled_data_loader = data_loader.get_unlabled_dataloader()
 
 
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
@@ -39,7 +40,6 @@ def main(config):
     model = config.init_obj('arch', module_arch)
 
     # get function handles of loss and metrics
-    
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]   
 

@@ -13,12 +13,15 @@ class EpitopeMHCTraniner(BaseTrainer):
     """"
     Trainer class
     """
-    def __init__(self, model, criterion, metric_fns, optimizer, config,
-                data_loader, valid_data_loader=None, test_data_loader=None,
+    def __init__(self, model, ema_model, criterion, metric_fns, optimizer, config,
+                data_loader, valid_data_loader=None, test_data_loader=None, unlabeled_data_loader=None,
                 lr_scheduler=None, len_epoch=None):
         super().__init__(model, criterion, metric_fns, optimizer, config)
         self.config = config
         self.data_loader = data_loader
+        self.ema_model = ema_model
+        self.alpha = config.mixup_alpha
+        self.temp = 0.5
 
         if len_epoch is None:
             # epoch-based training
@@ -30,6 +33,7 @@ class EpitopeMHCTraniner(BaseTrainer):
         
         self.valid_data_loader = valid_data_loader
         self.test_data_loader = test_data_loader
+        self.unlabeled_data_loader = unlabeled_data_loader
 
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
@@ -52,6 +56,13 @@ class EpitopeMHCTraniner(BaseTrainer):
             MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
             target = target.to(self.device)
 
+            unlabeled_epitope_tokenized = {k:v.to(self.device) for k,v in next(self.unlabeled_data_loader)[0].items()}
+            unlabeled_MHC_tokenized = {k:v.to(self.device) for k,v in next(self.unlabeled_data_loader)[1].items()}
+            unlabeled_target = next(self.unlabeled_data_loader)[2].to(self.device)
+
+            # Pseduo-labels
+            self.model.eval()
+
             # print('target',target.shape)
             self.optimizer.zero_grad()
             output = self.model(epitope_tokenized, MHC_tokenized)
@@ -59,7 +70,6 @@ class EpitopeMHCTraniner(BaseTrainer):
             # print('output',output.shape)
             # target shape: [batch_size,], output shape: [batch_size, 920, 1]
             loss = self.criterion(output, target)
-            # loss = loss.to(self.device)
             loss.backward()
             self.optimizer.step()
 

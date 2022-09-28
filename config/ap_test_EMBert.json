@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-ap-test",
+    "name": "EMBert-ap-test/Semi_model",
     "n_gpu": 1,
 
     "arch": {

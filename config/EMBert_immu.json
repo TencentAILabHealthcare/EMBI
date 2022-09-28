@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Immu-Data-test/Data_augmentation",
+    "name": "EMBert-Immu-Data-test/Weighted_Loss",
     "n_gpu": 1,
 
     "arch": {
@@ -39,7 +39,8 @@
             "weight_decay": 0.1
         }
     },
-    "loss": "BCELoss",
+    "loss": "BCELoss_weighted",
+    "loss_weight":"5:1",
     "metrics": [
         "accuracy_sample"
     ],
@@ -58,7 +59,7 @@
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 7,
+        "early_stop": 8,
 
         "tensorboard": true
     }

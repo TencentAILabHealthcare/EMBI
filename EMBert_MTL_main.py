@@ -1,11 +1,12 @@
+from cgi import test
 import torch
 import numpy as np
-import data.EMBert_immu_dataset as module_data
-import models.epitope_mhc_bert as module_arch
+import data.EMBert_MTL_dataset as module_data
+import models.EMBert_MTL as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
 import transformers
-from trainer.epitope_MHC_trainer import EpitopeMHCTraniner as Trainer
+from trainer.EMBert_MTL_trainer import EMBertMTLTraniner as Trainer
 import argparse
 import collections
 from parse_config import ConfigParser
@@ -25,9 +26,7 @@ def main(config):
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_dataset(valid=True)
-    test_data_loader = data_loader.get_test_dataloader()
-    # test_data_loader = data_loader.split_dataset(test=True)
-
+    test_data_loader = data_loader.split_dataset(test=True)
 
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
@@ -39,16 +38,16 @@ def main(config):
     model = config.init_obj('arch', module_arch)
 
     # get function handles of loss and metrics
-    
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]   
-
     ## freeze layer
 
-    for param in model.EpitopeBert.base_model.embeddings.parameters():
-        param.requires_grad = False
-    for param in model.MHCBert.base_model.embeddings.parameters():
-        param.requires_grad = False
+    if config['freeze_embedding']:
+        print('freeze embedding')
+        for param in model.EpitopeBert.base_model.embeddings.parameters():
+            param.requires_grad = False
+        for param in model.MHCBert.base_model.embeddings.parameters():
+            param.requires_grad = False
 
     freeze_top_layers = config['freeze_top']
     logger.info('Freeze the embeeding layers and top {} encoders of EpitopeBert'.format(freeze_top_layers))
@@ -57,6 +56,7 @@ def main(config):
     logger.info('Freeze the embeeding layers and top {} encoders of MHCBert'.format(freeze_top_layers))
     for param in model.MHCBert.base_model.encoder.layer[0: freeze_top_layers+1].parameters():
         param.requires_grad = False 
+
     logger.info(model)
 
     trainable_params = model.parameters()
@@ -78,7 +78,7 @@ def main(config):
 
     # load best checkpoint
     resume = str(config.save_dir / 'model_best.pth')
-    # resume = '../Result/checkpoints/Epitope-MHC-Debug/0825_125618/model_best.pth'
+    # resume = '../Result/checkpoints/EMBert-MTL/0928_174628/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
@@ -87,9 +87,9 @@ def main(config):
     test_output = trainer.test()
     log={
         'total_accuracy': test_output['accuracy'],
-        'precision':test_output['precision'],
-        'recall': test_output['recall'],
-        'roc_auc': test_output['roc_auc']
+        # 'precision':test_output['precision'],
+        # 'recall': test_output['recall'],
+        # 'roc_auc': test_output['roc_auc']
     }
     logger.info(log)
 
@@ -110,7 +110,8 @@ if __name__ == '__main__':
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
         CustomArgs(['--d', '--dropout'], type=float, target='arch;args;dropout'),
-        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay')
+        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay'),
+        CustomArgs(['--ft', '--freeze_top'], type=int, target='freeze_top')
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

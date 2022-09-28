@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Predict-Immu-test/All_epitope_without_PRIME",
+    "name": "EMBert-Predict-Immu-test/MTL/AP_specific",
     "n_gpu": 1,
 
     "arch": {

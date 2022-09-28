@@ -83,7 +83,7 @@ def main(config):
         recall,
         auc
     ))
-    test_result_df.to_csv(join(config.save_dir, '20220831_IEDB_ap_testdata.csv'), index=False)
+    test_result_df.to_csv(join(config.save_dir, '20220914_IEDB_test_data_predict.csv'), index=False)
 
 
 

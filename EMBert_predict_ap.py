@@ -38,7 +38,7 @@ def main(config):
     logger = config.get_logger('Predict')
 
     # load best checkpoint
-    resume = '../Result/checkpoints/EMBert-Pre-Debug/0826_183701/model_best.pth'
+    resume = '../Result/checkpoints/EMBert-AP-Data-Augmentation/0914_144510/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
@@ -52,9 +52,11 @@ def main(config):
     with torch.no_grad():
         for (epitope_tokenized, MHC_tokenized, target) in tqdm(test_data_loader):
             # print('batch_idx', batch_idx)
+            print('target', target)
             epitope_tokenized = {k:v.to("cuda") for k,v in epitope_tokenized.items()}
             MHC_tokenized = {k:v.to("cuda") for k,v in MHC_tokenized.items()}                
             target = target.to("cuda")
+            print('target', target)
             
             output = model(epitope_tokenized, MHC_tokenized)
             epitope_str = epitope_tokenizer.batch_decode(epitope_tokenized['input_ids'], skip_special_tokens=True)
@@ -67,6 +69,7 @@ def main(config):
             y_pred_r = np.round_(y_pred)
             # print('y_pred_r:', y_pred_r)
             y_true = np.squeeze(target.cpu().detach().numpy())
+            print('y_true',y_true)
 
             test_result['input'].append(epitope_tokenized['input_ids'].cpu().detach().numpy())
             test_result['output'].append(y_pred)
