@@ -1,4 +1,3 @@
-from imp import source_from_cache
 import pickle
 import torch
 from .base_trainer import BaseTrainer
@@ -48,41 +47,58 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         correct_output = {'count':0, 'num':0}
-        for batch_idx, (epitope_tokenized, MHC_tokenized, target) in enumerate(self.data_loader):
+        for batch_idx, (epitope_tokenized, MHC_tokenized, target, source) in enumerate(self.data_loader):
             epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
             MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
             target = target.to(self.device)
 
+            # source = source.to_numpy()
+
             # print('target',target.shape)
             self.optimizer.zero_grad()
-
-            
-            output = self.model(epitope_tokenized, MHC_tokenized)
+            # output = self.model(epitope_tokenized, MHC_tokenized)
             # output = torch.unsqueeze(output, 1)
             # print('output',output.shape)
             # target shape: [batch_size,], output shape: [batch_size, 920, 1]
-            
-            loss = self.criterion(output, target, class_weights=[1,6])
-            # loss = loss.to(self.device)
+            immu_output, BA_output, AP_output = self.model(epitope_tokenized, MHC_tokenized)
+
+            loss0 = self.criterion(BA_output[source==0], target[source==0])
+            loss1 = self.criterion(AP_output[source==1], target[source==1])
+            loss2 = self.criterion(immu_output[source==2], target[source==2])
+
+            loss = loss0+loss1+loss2
+
             loss.backward()
             self.optimizer.step()
 
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
             with torch.no_grad():
-                y_pred = output.cpu().detach().numpy()
-                y_pred = np.round_(y_pred)
-                y_true = np.squeeze(target.cpu().detach().numpy())
+                immu_pred = immu_output[source==2].cpu().detach().numpy()
+                immu_pred_r = np.round_(immu_pred)
+                BA_pred = BA_output[source==0].cpu().detach().numpy()
+                BA_pred_r = np.round_(BA_pred)
+                AP_pred = AP_output[source==1].cpu().detach().numpy()
+                AP_pred_r = np.round_(AP_pred)
+
+                # y_pred = np.round_(y_pred)
+                immu_true = np.squeeze(target[source==2].cpu().detach().numpy())
+                BA_true = np.squeeze(target[source==0].cpu().detach().numpy())
+                AP_true = np.squeeze(target[source==1].cpu().detach().numpy())
                 # print('y_pred',y_pred.shape)
                 # print('y_true',y_true.shape)
-               
+
                 for met in self.metric_fns:
-                    self.train_metrics.update(met.__name__, met(y_pred, y_true))
+                    self.train_metrics.update(met.__name__, met(BA_pred_r, BA_true))
+                    self.train_metrics.update(met.__name__, met(AP_pred_r, AP_true))
+                    self.train_metrics.update(met.__name__, met(immu_pred_r, immu_true))
 
                 # compute the total correct predictions
-                correct, num = correct_count(y_pred, y_true)
-                correct_output['count'] += correct
-                correct_output['num'] += num   
+                correct_ba, num_ba = correct_count(BA_pred_r, BA_true)
+                correct_ap, num_ap = correct_count(AP_pred_r, AP_true)
+                correct_immu, num_immu = correct_count(immu_pred_r, immu_true)
+                correct_output['count'] += correct_ba + correct_ap + correct_immu
+                correct_output['num'] += num_ba + num_ap + num_immu
             
             if batch_idx % self.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(epoch, self._progress(batch_idx), loss.item()))
@@ -112,27 +128,44 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.valid_metrics.reset()
         correct_output = {'count': 0, 'num': 0}
         with torch.no_grad():
-            for batch_idx, (epitope_tokenized, MHC_tokenized, target, source_from_cache) in enumerate(self.valid_data_loader):  
+            for batch_idx, (epitope_tokenized, MHC_tokenized, target,source) in enumerate(self.valid_data_loader):  
                 epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
                 MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
-                loss = self.criterion(output, target)      
+                immu_output, BA_output, AP_output = self.model(epitope_tokenized, MHC_tokenized)
+
+                loss0 = self.criterion(BA_output[source==0], target[source==0])
+                loss1 = self.criterion(AP_output[source==1], target[source==1])
+                loss2 = self.criterion(immu_output[source==2], target[source==2])
+
+                loss = loss0+loss1+loss2      
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 self.valid_metrics.update('loss', loss.item())
 
-                y_pred = output.cpu().detach().numpy()
-                y_pred = np.round_(y_pred)
-                y_true = np.squeeze(target.cpu().detach().numpy())
+                immu_pred = immu_output[source==2].cpu().detach().numpy()
+                immu_pred_r = np.round_(immu_pred)
+                BA_pred = BA_output[source==0].cpu().detach().numpy()
+                BA_pred_r = np.round_(BA_pred)
+                AP_pred = AP_output[source==1].cpu().detach().numpy()
+                AP_pred_r = np.round_(AP_pred)
+
+                immu_true = np.squeeze(target[source==2].cpu().detach().numpy())
+                BA_true = np.squeeze(target[source==0].cpu().detach().numpy())
+                AP_true = np.squeeze(target[source==1].cpu().detach().numpy())
+                
                 for met in self.metric_fns:
-                    self.valid_metrics.update(met.__name__, met(y_pred, y_true))
+                    self.train_metrics.update(met.__name__, met(BA_pred_r, BA_true))
+                    self.train_metrics.update(met.__name__, met(AP_pred_r, AP_true))
+                    self.train_metrics.update(met.__name__, met(immu_pred_r, immu_true))
 
                 # compute the total correct predictions
-                correct, num = correct_count(y_pred, y_true)
-                correct_output['count'] += correct
-                correct_output['num'] += num
+                correct_ba, num_ba = correct_count(BA_pred_r, BA_true)
+                correct_ap, num_ap = correct_count(AP_pred_r, AP_true)
+                correct_immu, num_immu = correct_count(immu_pred_r, immu_true)
+                correct_output['count'] += correct_ba + correct_ap + correct_immu
+                correct_output['num'] += num_ba + num_ap + num_immu
 
         valid_metrics = self.valid_metrics.result()
         test_accuracy = correct_output['count'] / correct_output['num']

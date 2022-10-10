@@ -12,28 +12,32 @@ class EpitopeMHCBertMTL(nn.Module):
                 nn.Linear(in_features=emb_dim*2, out_features=emb_dim),
                 nn.ReLU(),
                 nn.Linear(in_features=emb_dim, out_features=int(emb_dim/2)), 
+                nn.ReLU(),
+                nn.Linear(in_features=int(emb_dim/2), out_features=int(emb_dim/4))
             )
         else:
             self.sharedlayer = nn.Sequential(
                 nn.Linear(in_features=emb_dim*2, out_features=emb_dim),
                 nn.ReLU(),
-                nn.Dropout(p=dropout),
                 nn.Linear(in_features=emb_dim, out_features=int(emb_dim/2)), 
+                nn.ReLU(),
+                nn.Dropout(p=dropout),
+                nn.Linear(in_features=int(emb_dim/2), out_features=int(emb_dim/4))
             )
         self.immulayer = nn.Sequential(
-            nn.Linear(in_features=int(emb_dim/2), out_features=256),
+            nn.Linear(in_features=int(emb_dim/4), out_features=128),
             nn.ReLU(),
-            nn.Linear(in_features=256, out_features=1)
+            nn.Linear(in_features=128, out_features=1)
         )
         self.BAlayer = nn.Sequential(
-            nn.Linear(in_features=int(emb_dim/2), out_features=256),
+            nn.Linear(in_features=int(emb_dim/4), out_features=128),
             nn.ReLU(),
-            nn.Linear(in_features=256, out_features=1)
+            nn.Linear(in_features=128, out_features=1)
         )
         self.APlayer = nn.Sequential(
-            nn.Linear(in_features=int(emb_dim/2), out_features=256),
+            nn.Linear(in_features=int(emb_dim/4), out_features=128),
             nn.ReLU(),
-            nn.Linear(in_features=256, out_features=1)
+            nn.Linear(in_features=128, out_features=1)
         )
 
         self.activation = nn.Sigmoid()
@@ -50,15 +54,11 @@ class EpitopeMHCBertMTL(nn.Module):
         MHC_cls = MHC_encoded[:, 0, :]   
         concated_encoded = torch.concat((epitope_cls, MHC_cls), dim=1)     
         shared_output = self.sharedlayer(concated_encoded)
+
+        
         immu_output = torch.squeeze(self.activation(self.immulayer(shared_output)))
         BA_output = torch.squeeze(self.activation(self.BAlayer(shared_output)))
         AP_output = torch.squeeze(self.activation(self.APlayer(shared_output)))
-        # print('output_embedding shape:', output.shape)
-
-        # output = torch.sum(torch.squeeze(output),axis=1)
-        # output = self.activation(output)
-        # output = torch.squeeze(output)
-        # print('output_embedding:', output )
 
         return immu_output, BA_output, AP_output
 

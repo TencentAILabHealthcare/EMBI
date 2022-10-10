@@ -40,6 +40,7 @@ def main(config):
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]   
+    
     ## freeze layer
 
     if config['freeze_embedding']:

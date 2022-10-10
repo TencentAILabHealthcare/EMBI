@@ -3,7 +3,7 @@
     "n_gpu": 1,
 
     "arch": {
-        "type": "EpitopeMHCBert",
+        "type": "EpitopeMHCBertMTL",
         "args": {
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
@@ -23,7 +23,7 @@
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
             "num_workers":1,
-            "sampler_type":"", 
+            "sampler_type":"balanced", 
             "epitope_tokenizer_dir":"/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHC_tokenizer_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "epitope_max_seq_length": 20,
@@ -39,7 +39,7 @@
             "weight_decay": 0.1
         }
     },
-    "loss": "BCELoss_weighted",
+    "loss": "BCELoss",
     "loss_weight":"5:1",
     "metrics": [
         "accuracy_sample"

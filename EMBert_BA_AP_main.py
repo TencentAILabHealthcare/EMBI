@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import data.EMBert_immu_dataset as module_data
+import data.EMBert_ap_dataset as module_data
 import models.epitope_mhc_bert as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
@@ -28,7 +28,6 @@ def main(config):
     test_data_loader = data_loader.get_test_dataloader()
     # test_data_loader = data_loader.split_dataset(test=True)
 
-
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
         valid_data_loader.sampler.__len__(),
@@ -39,7 +38,6 @@ def main(config):
     model = config.init_obj('arch', module_arch)
 
     # get function handles of loss and metrics
-    
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]   
 
@@ -110,9 +108,7 @@ if __name__ == '__main__':
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
         CustomArgs(['--d', '--dropout'], type=float, target='arch;args;dropout'),
-        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay'),
-        CustomArgs(['--seed', '--seed'], type=int, target='data_loader;args;seed')
-
+        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay')
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

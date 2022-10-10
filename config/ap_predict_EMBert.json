@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Predict-AP-test/MTL/BA_specific",
+    "name": "EMBert-Predict-AP-test/MTL/Immu_specific",
     "n_gpu": 1,
     "arch": {
         "type": "EpitopeMHCBert",

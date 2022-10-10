@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-MTL/AP_predict",
+    "name": "EMBert-MTL/Immu_predict",
     "n_gpu": 1,
     "arch": {
         "type": "EpitopeMHCBertMTL",

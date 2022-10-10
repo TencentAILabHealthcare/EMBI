@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Predict-BA-test/MTL/AP_specific",
+    "name": "EMBert-Predict-BA-test/MTL/Immu_specific",
     "n_gpu": 1,
 
     "arch": {

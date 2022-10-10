@@ -64,7 +64,8 @@ class EMBertMTLTraniner(BaseTrainer):
             BA_loss = self.criterion(BA_output, BA_target)
             AP_loss = self.criterion(AP_output, AP_target)
 
-            loss = immu_loss * 0.5 + BA_loss * 0.25 + AP_loss * 0.25
+            # weighted loss
+            loss = immu_loss * 1/3 + BA_loss * 1/3 + AP_loss * 1/3
             # loss = loss.to(self.device)
             loss.backward()
             self.optimizer.step()
