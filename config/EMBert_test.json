@@ -17,9 +17,9 @@
         "args":{
             "data_dir": "./data/raw_data/",
             "batch_size": 256,
-            "seed": 0,
+            "seed": 100,
             "validation_split": 0.1,
-            "test_split": 0.0,
+            "test_split": 0.2,
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
             "num_workers":1,
@@ -39,7 +39,7 @@
             "weight_decay": 0.1
         }
     },
-    "loss": "BCELoss",
+    "loss": "BCELoss_weighted",
     "loss_weight":"5:1",
     "metrics": [
         "accuracy_sample"

@@ -49,21 +49,21 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         correct_output = {'count':0, 'num':0}
-        for batch_idx, (epitope_tokenized, MHC_tokenized, target) in enumerate(self.data_loader):
-            epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
-            MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
+        for batch_idx, (p1, p2, target) in enumerate(self.data_loader):
+            p1 = p1.to(self.device)
+            p2 = p2.to(self.device)
             target = target.to(self.device)
 
             # print('target',target.shape)
             self.optimizer.zero_grad()
 
             
-            output = self.model(epitope_tokenized, MHC_tokenized)
+            output = self.model(p1, p2)
             # output = torch.unsqueeze(output, 1)
             # print('output',output.shape)
             # target shape: [batch_size,], output shape: [batch_size, 920, 1]
             
-            loss = self.criterion(output, target, class_weights=[1,6])
+            loss = self.criterion(output, target)
             # loss = loss.to(self.device)
             loss.backward()
             self.optimizer.step()
@@ -113,12 +113,12 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.valid_metrics.reset()
         correct_output = {'count': 0, 'num': 0}
         with torch.no_grad():
-            for batch_idx, (epitope_tokenized, MHC_tokenized, target) in enumerate(self.valid_data_loader):  
-                epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
-                MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
+            for batch_idx, (p1, p2, target) in enumerate(self.valid_data_loader):  
+                p1 = p1.to(self.device)
+                p2 = p2.to(self.device)
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
+                output = self.model(p1, p2)
                 loss = self.criterion(output, target)      
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
@@ -152,12 +152,12 @@ class EpitopeMHCTraniner(BaseTrainer):
         test_result = {'input': [], 'output':[], 'target': [], 'output_r':[]}       
 
         with torch.no_grad():
-            for _, (epitope_tokenized, MHC_tokenized, target) in enumerate(self.test_data_loader):
-                epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
-                MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}                
+            for _, (p1, p2, target) in enumerate(self.test_data_loader):
+                p1 = p1.to(self.device)
+                p2 = p2.to(self.device)
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
+                output = self.model(p1, p2)
                 loss = self.criterion(output, target)
                 # print('loss.item:',loss.item())
                 # print('output test,', output)
@@ -170,7 +170,6 @@ class EpitopeMHCTraniner(BaseTrainer):
                 # print()
                 y_true = np.squeeze(target.cpu().detach().numpy())
 
-                test_result['input'].append(epitope_tokenized['input_ids'].cpu().detach().numpy())
                 test_result['output'].append(y_pred)
                 test_result['target'].append(y_true)
                 test_result['output_r'].append(y_pred_r)

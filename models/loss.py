@@ -14,9 +14,9 @@ def BCELoss(output, target):
 #     bce = - 0.8 * target * torch.log(input) - 0.2 * torch.log(1 - input)
 #     return bce
 
-def BCELoss_weighted(output, target, class_weights=[1,6]):
+def BCELoss_weighted(output, target, class_weights=[1,5]):
     weight = torch.zeros_like(target)
-    print('class weight',class_weights)
+    # print('class weight',class_weights)
     weight[target==0] = class_weights[0]
     weight[target==1] = class_weights[1]
     loss = F.binary_cross_entropy(input=output, target=target, weight=weight)

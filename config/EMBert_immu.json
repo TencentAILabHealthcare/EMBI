@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Immu-Data-test/DataLoader_test",
+    "name": "EMBert-Immu-Data-test/Balanced_WCE",
     "n_gpu": 1,
 
     "arch": {

@@ -20,6 +20,9 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.config = config
         self.data_loader = data_loader
 
+        self.MHC_tokenizer = data_loader.get_MHC_tokenizer()
+        self.epitope_tokenizer = data_loader.get_epitope_tokenizer()
+
         if len_epoch is None:
             # epoch-based training
             self.len_epoch = len(self.data_loader)
@@ -154,11 +157,11 @@ class EpitopeMHCTraniner(BaseTrainer):
                 immu_true = np.squeeze(target[source==2].cpu().detach().numpy())
                 BA_true = np.squeeze(target[source==0].cpu().detach().numpy())
                 AP_true = np.squeeze(target[source==1].cpu().detach().numpy())
-                
+
                 for met in self.metric_fns:
-                    self.train_metrics.update(met.__name__, met(BA_pred_r, BA_true))
-                    self.train_metrics.update(met.__name__, met(AP_pred_r, AP_true))
-                    self.train_metrics.update(met.__name__, met(immu_pred_r, immu_true))
+                    self.valid_metrics.update(met.__name__, met(BA_pred_r, BA_true))
+                    self.valid_metrics.update(met.__name__, met(AP_pred_r, AP_true))
+                    self.valid_metrics.update(met.__name__, met(immu_pred_r, immu_true))
 
                 # compute the total correct predictions
                 correct_ba, num_ba = correct_count(BA_pred_r, BA_true)
@@ -181,48 +184,134 @@ class EpitopeMHCTraniner(BaseTrainer):
         total_loss = 0.0
 
         correct_output = {'count': 0, 'num': 0}
-        test_result = {'input': [], 'output':[], 'target': [], 'output_r':[]}       
+        test_result = {
+            'input': [], 
+            'ba_output':[], 'ba_target': [], 'ba_output_r':[], 
+            'ap_output':[], 'ap_target': [], 'ap_output_r':[],
+            'immu_output':[], 'immu_target': [], 'immu_output_r':[],
+            'Epitope':[], 'MHC':[], 'ba_source':[], 'ap_source':[], 'immu_source':[]
+            }
+
 
         with torch.no_grad():
-            for _, (epitope_tokenized, MHC_tokenized, target) in enumerate(self.test_data_loader):
+            for _, (epitope_tokenized, MHC_tokenized, target, source) in enumerate(self.test_data_loader):
                 epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
                 MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}                
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
-                loss = self.criterion(output, target)
+                epitope_str = self.epitope_tokenizer.batch_decode(epitope_tokenized['input_ids'], skip_special_tokens=True)
+                epitope_nospace = [s.replace(" ","") for s in epitope_str]
+                MHC_str = self.MHC_tokenizer.batch_decode(MHC_tokenized['input_ids'], skip_special_tokens=True)
+                MHC_nospace = [s.replace(" ","") for s in MHC_str]
+
+                immu_output, BA_output, AP_output = self.model(epitope_tokenized, MHC_tokenized)
+
+                loss0 = self.criterion(BA_output[source==0], target[source==0])
+                loss1 = self.criterion(AP_output[source==1], target[source==1])
+                loss2 = self.criterion(immu_output[source==2], target[source==2])
+
+                loss = loss0+loss1+loss2 
                 # print('loss.item:',loss.item())
                 # print('output test,', output)
 
                 batch_size = torch.squeeze(target).shape[0]
                 total_loss += loss.item() * batch_size
 
-                y_pred = output.cpu().detach().numpy()
-                y_pred_r = np.round_(y_pred)
+                immu_pred = immu_output[source==2].cpu().detach().numpy()
+                immu_pred_r = np.round_(immu_pred)
+                BA_pred = BA_output[source==0].cpu().detach().numpy()
+                BA_pred_r = np.round_(BA_pred)
+                AP_pred = AP_output[source==1].cpu().detach().numpy()
+                AP_pred_r = np.round_(AP_pred)
+
+                immu_true = np.squeeze(target[source==2].cpu().detach().numpy())
+                BA_true = np.squeeze(target[source==0].cpu().detach().numpy())
+                AP_true = np.squeeze(target[source==1].cpu().detach().numpy())
                 # print()
-                y_true = np.squeeze(target.cpu().detach().numpy())
 
                 test_result['input'].append(epitope_tokenized['input_ids'].cpu().detach().numpy())
-                test_result['output'].append(y_pred)
-                test_result['target'].append(y_true)
-                test_result['output_r'].append(y_pred_r)
+                test_result['ba_output'].append(BA_pred)
+                test_result['ba_target'].append(BA_true)
+                test_result['ba_output_r'].append(BA_pred_r)
+                test_result['ap_output'].append(AP_pred)
+                test_result['ap_target'].append(AP_true)
+                test_result['ap_output_r'].append(AP_pred_r)
+                test_result['immu_output'].append(immu_pred)
+                test_result['immu_target'].append(immu_true)
+                test_result['immu_output_r'].append(immu_pred_r)
+
+                test_result['Epitope'].append(epitope_nospace)
+                test_result['MHC'].append(MHC_nospace)
+                test_result['ba_source'].append(source[source==0].cpu().detach().numpy())
+                test_result['ap_source'].append(source[source==1].cpu().detach().numpy())
+                test_result['immu_source'].append(source[source==2].cpu().detach().numpy())
 
 
-                correct, num = correct_count(y_pred_r, y_true)
-                correct_output['count'] += correct
-                correct_output['num'] += num
-        y_pred = np.concatenate(test_result['output'])
-        y_true = np.concatenate(test_result['target'])
-        y_pred_r = np.concatenate(test_result['output_r'])
-        test_result_df = pd.DataFrame({'y_pred': list(y_pred.flatten()),
-                                        'y_true': list(y_true.flatten()),
-                                        'y_pred_r': list(y_pred_r.flatten())})
+                correct_ba, num_ba = correct_count(BA_pred_r, BA_true)
+                correct_ap, num_ap = correct_count(AP_pred_r, AP_true)
+                correct_immu, num_immu = correct_count(immu_pred_r, immu_true)
+                correct_output['count'] += correct_ba + correct_ap + correct_immu
+                correct_output['num'] += num_ba + num_ap + num_immu
 
-        test_result_df.to_csv(join(self.config._save_dir, 'testdata_predict.csv'), index=False)
+        ba_pred = np.concatenate(test_result['ba_output'])
+        ba_true = np.concatenate(test_result['ba_target'])
+        ba_pred_r = np.concatenate(test_result['ba_output_r'])
+        ba_source = np.concatenate(test_result['ba_source'])
+        # print('len ba_source', ba_source)
+
+        ap_pred = np.concatenate(test_result['ap_output'])
+        ap_true = np.concatenate(test_result['ap_target'])
+        ap_pred_r = np.concatenate(test_result['ap_output_r'])
+        ap_source = np.concatenate(test_result['ap_source'])
+
+        immu_pred = np.concatenate(test_result['immu_output'])
+        immu_true = np.concatenate(test_result['immu_target'])
+        immu_pred_r = np.concatenate(test_result['immu_output_r'])
+        immu_source = np.concatenate(test_result['immu_source'])
+
+
+        epitope_input = np.concatenate(test_result['Epitope'])
+        MHC_input = np.concatenate(test_result['MHC'])
+
+        ba_test_result_df = pd.DataFrame({
+                                        # 'Epitope':list(epitope_input.flatten()),
+                                        # 'MHC':list(MHC_input.flatten()),
+                                        'ba_pred': list(ba_pred.flatten()),
+                                        'ba_true': list(ba_true.flatten()),
+                                        'ba_pred_r': list(ba_pred_r.flatten()),
+                                        'ba_source':list(ba_source.flatten())})
+
+        ap_test_result_df = pd.DataFrame({
+                                        # 'Epitope':list(epitope_input.flatten()),
+                                        # 'MHC':list(MHC_input.flatten()),
+                                        'ap_pred': list(ap_pred.flatten()),
+                                        'ap_true': list(ap_true.flatten()),
+                                        'ap_pred_r': list(ap_pred_r.flatten()),
+                                        'ap_source':list(ap_source.flatten())})
+
+        immu_test_result_df = pd.DataFrame({
+                                        # 'Epitope':list(epitope_input.flatten()),
+                                        # 'MHC':list(MHC_input.flatten()),
+                                        'immu_pred': list(immu_pred.flatten()),
+                                        'immu_true': list(immu_true.flatten()),
+                                        'immu_pred_r': list(immu_pred_r.flatten()),
+                                        'immu_source':list(immu_source.flatten())})
+
+
+        ba_test_result_df.to_csv(join(self.config._save_dir, 'ba_testdata_predict.csv'), index=False)
+        ap_test_result_df.to_csv(join(self.config._save_dir, 'ap_testdata_predict.csv'), index=False)
+        immu_test_result_df.to_csv(join(self.config._save_dir, 'immu_testdata_predict.csv'), index=False)
+
         
-        precision, recall = calculatePR(test_result_df['y_pred_r'].to_list(), test_result_df['y_true'].to_list())
+        precision_ba, recall_ba = calculatePR(ba_test_result_df['ba_pred_r'].to_list(), ba_test_result_df['ba_true'].to_list())
+        precision_ap, recall_ap = calculatePR(ap_test_result_df['ap_pred_r'].to_list(), ap_test_result_df['ap_true'].to_list())
+        precision_immu, recall_immu = calculatePR(immu_test_result_df['immu_pred_r'].to_list(), immu_test_result_df['immu_true'].to_list())
 
-        auc = roc_auc(list(test_result_df['y_pred']), list(test_result_df['y_true']))    
+
+        auc_ba = roc_auc(list(ba_test_result_df['ba_pred']), list(ba_test_result_df['ba_true']))
+        auc_ap = roc_auc(list(ap_test_result_df['ap_pred']), list(ap_test_result_df['ap_true']))
+        auc_immu = roc_auc(list(immu_test_result_df['immu_pred']), list(immu_test_result_df['immu_true']))
+          
 
         with open(join(self.config._save_dir, 'test_result.pkl'),'wb') as f:
             pickle.dump(test_result, f)
@@ -230,9 +319,9 @@ class EpitopeMHCTraniner(BaseTrainer):
         test_output = {'n_samples': len(self.test_data_loader.sampler),
                        'total_loss': total_loss,
                        'accuracy': correct_output['count'] / correct_output['num'],
-                       'precision': precision,
-                       'recall': recall,
-                       'roc_auc':auc
+                       'ba_ap_immu_precision': [precision_ba, precision_ap, precision_immu],
+                       'ba_ap_immu_recall': [recall_ba, recall_ap, recall_immu],
+                       'ba_ap_immu_roc_auc':[auc_ba, auc_ap, auc_immu]
                        }
         return test_output                       
 

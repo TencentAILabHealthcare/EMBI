@@ -9,8 +9,9 @@ import torch
 
 class BaseDataLoader(DataLoader):
     def __init__(self, dataset, batch_size, seed, validation_split,  
-                 test_split, sampler_type, num_workers, collate_fn=default_collate):
+                 test_split, shuffle, sampler_type, num_workers, collate_fn=default_collate):
         self.validation_split = validation_split
+        print('validation split',validation_split)
         self.test_split = test_split
         self.seed = seed
         self.dataset = dataset

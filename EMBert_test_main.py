@@ -81,7 +81,7 @@ def main(config):
 
     # load best checkpoint
     resume = str(config.save_dir / 'model_best.pth')
-    # resume = '../Result/checkpoints/Epitope-MHC-Debug/0825_125618/model_best.pth'
+    # resume = '../Result/checkpoints/EMBert-Immu-Data-test/DataLoader_test/1011_155320/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
@@ -90,9 +90,9 @@ def main(config):
     test_output = trainer.test()
     log={
         'total_accuracy': test_output['accuracy'],
-        'precision':test_output['precision'],
-        'recall': test_output['recall'],
-        'roc_auc': test_output['roc_auc']
+        'ba_ap_immu_precision':test_output['ba_ap_immu_precision'],
+        'ba_ap_immu_recall': test_output['ba_ap_immu_recall'],
+        'ba_ap_immu_roc_auc': test_output['ba_ap_immu_roc_auc']
     }
     logger.info(log)
 

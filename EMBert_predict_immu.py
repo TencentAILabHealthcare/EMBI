@@ -38,7 +38,7 @@ def main(config):
     logger = config.get_logger('Predict')
 
     # load best checkpoint
-    resume = '../Result/checkpoints/EMBert-Immu-Data-test/Weighted_Loss/0923_105312/model_best.pth'
+    resume = '../Result/checkpoints/EMBert-Immu-Data-test/Balanced_WCE/1011_205942/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']

@@ -1,9 +1,11 @@
-from imp import source_from_cache
+from cgi import print_arguments
+from curses import delay_output
 import pickle
 import torch
 from .base_trainer import BaseTrainer
 from utils.utility import inf_loop, MetricTracker
 from models.metric import correct_count, calculatePR, roc_auc
+import models.epitope_mhc_bert as module_arch_
 import numpy as np
 from os.path import join
 import pandas as pd
@@ -14,13 +16,22 @@ class EpitopeMHCTraniner(BaseTrainer):
     """"
     Trainer class
     """
-    def __init__(self, model, criterion, metric_fns, optimizer, config,
+    def __init__(self, ba_model_resume, ap_model_resume, model, criterion, metric_fns, optimizer, config,
                 data_loader, valid_data_loader=None, test_data_loader=None,
                 lr_scheduler=None, len_epoch=None):
         super().__init__(model, criterion, metric_fns, optimizer, config)
         self.config = config
         self.data_loader = data_loader
-        
+        # self.ba_model_resume = ba_model_resume
+        # self.ap_model_resume = ap_model_resume
+        self.ba_model = config.init_obj('arch_ba', module_arch_)
+        self.ap_model = config.init_obj('arch_ap', module_arch_)
+        self.ba_model.load_state_dict(torch.load(ba_model_resume)['state_dict'])
+        self.ap_model.load_state_dict(torch.load(ap_model_resume)['state_dict'])
+        print('self.device', self.device)
+        self.ba_model.to(self.device)
+        self.ap_model.to(self.device)
+
 
         if len_epoch is None:
             # epoch-based training
@@ -46,6 +57,15 @@ class EpitopeMHCTraniner(BaseTrainer):
         :param epoch: Integer, current training epoch.
         :return: A log that contains average loss and metric in this epoch.
         """
+        # initate parent model
+        # ba_resume = self.ba_model_resume
+        # ba_checkpoint = torch.load(ba_resume)
+        # ba_state_dict = ba_checkpoint['state_dict']
+        # self.ba_model.load_state_dict(ba_state_dict) 
+
+        # ap_resume = self.ap_model_resume
+        # self.ap_model.load_state_dict(torch.load(ap_resume)['state_dict']) 
+
         self.model.train()
         self.train_metrics.reset()
         correct_output = {'count':0, 'num':0}
@@ -53,17 +73,24 @@ class EpitopeMHCTraniner(BaseTrainer):
             epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
             MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
             target = target.to(self.device)
-
+            # print("device",epitope_tokenized.get_device())
+            # print(MHC_tokenized.get_device())
+            # parent output 
+            ba_output = self.ba_model(epitope_tokenized, MHC_tokenized)
+            ap_output = self.ap_model(epitope_tokenized, MHC_tokenized)
+            # ba_output = torch.tensor(ba_output, dtype=torch.float32)
+            # ap_output = torch.tensor(ap_output, dtype=torch.float32)
             # print('target',target.shape)
             self.optimizer.zero_grad()
 
-            
-            output = self.model(epitope_tokenized, MHC_tokenized)
+            # ba_output.to(self.device)
+            # ap_output.to(self.device)
+            output = self.model(ba_output, ap_output)
             # output = torch.unsqueeze(output, 1)
             # print('output',output.shape)
             # target shape: [batch_size,], output shape: [batch_size, 920, 1]
             
-            loss = self.criterion(output, target, class_weights=[1,6])
+            loss = self.criterion(output, target)
             # loss = loss.to(self.device)
             loss.backward()
             self.optimizer.step()
@@ -118,7 +145,12 @@ class EpitopeMHCTraniner(BaseTrainer):
                 MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
+                ba_output = self.ba_model(epitope_tokenized, MHC_tokenized)
+                ap_output = self.ap_model(epitope_tokenized, MHC_tokenized)
+
+                # ba_output.to(self.device)
+                # ap_output.to(self.device)
+                output = self.model(ba_output, ap_output)
                 loss = self.criterion(output, target)      
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
@@ -157,7 +189,15 @@ class EpitopeMHCTraniner(BaseTrainer):
                 MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}                
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
+                ba_output = self.ba_model(epitope_tokenized, MHC_tokenized)
+                ap_output = self.ap_model(epitope_tokenized, MHC_tokenized)
+
+                # ba_output = torch.tensor(ba_output, dtype=torch.float32)
+                # ap_output = torch.tensor(ap_output, dtype=torch.float32)
+
+                # ba_output.to(self.device)
+                # ap_output.to(self.device)
+                output = self.model(ba_output, ap_output)
                 loss = self.criterion(output, target)
                 # print('loss.item:',loss.item())
                 # print('output test,', output)

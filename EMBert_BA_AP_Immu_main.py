@@ -5,7 +5,7 @@ import models.epitope_mhc_mlp as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
 import transformers
-from trainer.epitope_MHC_ba_ap_trainer import EpitopeMHCTraniner as Trainer
+from trainer.epitope_MHC_ba_ap_immu_trainer import EpitopeMHCTraniner as Trainer
 import argparse
 import collections
 from parse_config import ConfigParser
@@ -49,10 +49,14 @@ def main(config):
     lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
 
     ba_model_resume = config['trainer']['ba_model_resume']
-    ap_model_resume = config['trainer']["ap_model_resume"]
+    ap_model_resume = config['trainer']['ap_model_resume']
 
-    trainer = Trainer(ba_model_resume, 
-                      ap_model_resume, model, criterion, metrics, optimizer,
+    ba_ap_model_resume = config['trainer']['ba_ap_model_resume']
+    immu_model_resume = config['trainer']["immu_model_resume"]
+
+
+    trainer = Trainer(ba_model_resume, ap_model_resume, ba_ap_model_resume, 
+                      immu_model_resume, model, criterion, metrics, optimizer,
                       config=config,
                       data_loader=data_loader,
                       valid_data_loader=valid_data_loader,
@@ -67,7 +71,7 @@ def main(config):
 
     # load best checkpoint
     resume = str(config.save_dir / 'model_best.pth')
-    # resume = '../Result/checkpoints/Epitope-MHC-Debug/0825_125618/model_best.pth'
+    # resume = '../Result/checkpoints/EMBert-BA-AP-Immu/1016_183814/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
