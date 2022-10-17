@@ -1,11 +1,13 @@
 {
-    "name": "EMBert-BA-AP-Immu/For_test",
+    "name": "EMBert-BA-AP-Immu/Multimodality",
     "n_gpu": 1,
     "arch": {
-        "type": "EpitopeMHCMLP",
+        "type": "EpitopeMHCBert",
         "args": {
-            "input_dim": 2,
-            "output_dim": 1
+            "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
+            "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
+            "emb_dim": 1536,
+            "dropout":""
         }
     },
     "arch_ba": {
@@ -53,7 +55,7 @@
             "batch_size": 256,
             "seed": 0,
             "validation_split": 0.1,
-            "test_split": 0.2,
+            "test_split": 0.0,
             "epitope_tokenizer_dir":"/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHC_tokenizer_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "epitope_max_seq_length": 20,
@@ -70,7 +72,7 @@
             "weight_decay": 0.1
         }
     },
-    "loss": "BCELoss",
+    "loss": "BCELoss_weighted",
     "metrics": [
         "accuracy_sample"
     ],

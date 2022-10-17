@@ -1,11 +1,11 @@
 import torch
 import numpy as np
 import data.EMBert_ba_ap_dataset as module_data
-import models.epitope_mhc_mlp as module_arch
+import models.epitope_mhc_bert_multimodality as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
 import transformers
-from trainer.epitope_MHC_ba_ap_immu_trainer import EpitopeMHCTraniner as Trainer
+from trainer.epitope_MHC_ba_ap_immu_multimodality_trainer import EpitopeMHCTraniner as Trainer
 import argparse
 import collections
 from parse_config import ConfigParser
@@ -62,7 +62,7 @@ def main(config):
                       valid_data_loader=valid_data_loader,
                       test_data_loader=test_data_loader,
                       lr_scheduler=lr_scheduler)
-    # trainer.train()
+    trainer.train()
 
     """Test."""
     logger = config.get_logger('test')
@@ -70,8 +70,8 @@ def main(config):
     test_metrics = [getattr(module_metric, met) for met in config['metrics']]
 
     # load best checkpoint
-    # resume = str(config.save_dir / 'model_best.pth')
-    resume = '../Result/checkpoints/EMBert-BA-AP-Immu/1016_183814/model_best.pth'
+    resume = str(config.save_dir / 'model_best.pth')
+    # resume = '../Result/checkpoints/EMBert-BA-AP-Immu/Multimodality/1017_212019/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']

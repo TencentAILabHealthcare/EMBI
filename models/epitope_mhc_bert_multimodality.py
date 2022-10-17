@@ -24,7 +24,7 @@ class EpitopeMHCBert(nn.Module):
 
 
     
-    def forward(self, epitope, MHC):
+    def forward(self, ba_relu_output, ap_relu_output,epitope, MHC):
         epitope_encoded = self.EpitopeBert(**epitope).last_hidden_state
         MHC_encoded = self.MHCBert(**MHC).last_hidden_state
         # print('x_input_ids',x_input_ids.shape)
@@ -32,21 +32,22 @@ class EpitopeMHCBert(nn.Module):
 
         epitope_cls = epitope_encoded[:, 0, :]
         MHC_cls = MHC_encoded[:, 0, :]   
-        concated_encoded = torch.concat((epitope_cls, MHC_cls), dim=1)     
+
+        concated_encoded = torch.concat((ba_relu_output, ap_relu_output, epitope_cls, MHC_cls), dim=1)     
         # output = self.decoder(concated_encoded)
-        for i in range(len(self.decoder)):
-            # print('i',i)
-            concated_encoded = self.decoder[i](concated_encoded)
-            # print('concated_encoded.shape',concated_encoded.shape)
-            if i == 1:
-                ReLU_output = concated_encoded
-        output = concated_encoded
+        # for i in range(len(self.decoder)):
+        #     print('i',i)
+        #     concated_encoded = self.decoder[i](concated_encoded)
+        #     print('concated_encoded.shape',concated_encoded.shape)
+        #     if i == 1:
+        #         ReLU_output = concated_encoded
+        output = self.decoder(concated_encoded)
 
         # output = torch.sum(torch.squeeze(output),axis=1)
         output = self.activation(output)
         output = torch.squeeze(output)
         # print('output_embedding:', output )
 
-        return output, ReLU_output
+        return output
 
 
