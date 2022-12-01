@@ -2,12 +2,14 @@
 This project is developed and maintained by @yixinguo and @owenbhe, supervised by @jianhuayao.
 
 ## Code structure
-* `./Benchmark/` includes the result of benchmark
+Note the data, result and OtherFolder folders are not shown in git.woa.com since these files are too large.
+
+* `./OtherFolder/Benchmark/` includes the result of benchmark
     * `./CD8_benchamrk_pred` netMHCpan prediction result, processing steps can be found in `./benchmark.ipynb`.
     * `./Figures` contains benchmark result.
     * `./IEDB_ligand_benchmark_result` contains benchmark reuslt using IEDB test data.
 
-* `./Data` includes some independent data from database, recent paper ...
+* `./OtherFolder/Data` includes some independent data from database, recent paper ...
     * `./ARTEMIS` MASS-spec data from Finton, Kathryn AK, et al. "ARTEMIS: A Novel Mass-Spec Platform for HLA-Restricted Self and Disease-Associated Peptide Discovery." Frontiers in Immunology 12 (2021): 658372.
     * `./COVID-19` covid-19 eptioep data from IEDB
     * `./data` netmhcpan training data
@@ -28,7 +30,7 @@ This project is developed and maintained by @yixinguo and @owenbhe, supervised b
     * `./checkpoints/` includes the checkpoint and configuration of each experiment.
     * `./datasplit/` includes the configuration, log file and results for each experiment.
 
-* `./TcellEpitope`
+* `./`
     * `./bert_data_prepare` contains the tokenizer building code.
     * `./config` contains the configuration files for each experiment.
     * `./data` includes the data files from IEDB, recent studies ...
