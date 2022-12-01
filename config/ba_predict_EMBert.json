@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Predict-BA-test/Cengji/AP_test",
+    "name": "EMBert-Predict-BA-test/embedding",
     "n_gpu": 1,
 
     "arch": {

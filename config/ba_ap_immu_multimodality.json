@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-BA-AP-Immu/Multimodality",
+    "name": "EMBert-BA-AP-Immu/Multimodality/Fine_tune_dppepneo_tesla",
     "n_gpu": 1,
     "arch": {
         "type": "EpitopeMHCBert",
@@ -7,7 +7,7 @@
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "emb_dim": 1536,
-            "dropout":""
+            "dropout":0
         }
     },
     "arch_ba": {
@@ -16,7 +16,7 @@
             "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "emb_dim": 768,
-            "dropout":0.5
+            "dropout":0
         }
     },
 
@@ -52,10 +52,10 @@
         "type": "EpitopeMHCBertDataLoader",
         "args":{
             "data_dir": "./data/raw_data/",
-            "batch_size": 256,
-            "seed": 0,
+            "batch_size": 64,
+            "seed": 3407,
             "validation_split": 0.1,
-            "test_split": 0.0,
+            "test_split": 0.5,
             "epitope_tokenizer_dir":"/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
             "MHC_tokenizer_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
             "epitope_max_seq_length": 20,
@@ -68,7 +68,7 @@
     "optimizer": {
         "type": "AdamW",
         "args":{
-            "lr": 0.0001,
+            "lr": 2e-5,
             "weight_decay": 0.1
         }
     },
@@ -84,7 +84,7 @@
         }
     },
     "trainer": {
-        "epochs": 100,
+        "epochs": 50,
         "ba_model_resume":"/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Result/checkpoints/Epitope-MHC-Debug/0907_143655/model_best.pth",
         "ap_model_resume":"/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Result/checkpoints/EMBert-AP-Data-Augmentation/0914_144510/model_best.pth",
         "ba_ap_model_resume":"/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Result/checkpoints/EMBert-BA-AP/1014_204231/model_best.pth",

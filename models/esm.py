@@ -23,11 +23,11 @@ class ESM2Decoder(base_model.BaseModel):
         #     nn.Linear(in_features=tcrbert_emb_dim, out_features=tcrbert_emb_dim)            
         # )
         self.decoder = nn.Sequential(
-            nn.Linear(in_features=esm_1b_dim, out_features=esm_1b_dim),
+            nn.Linear(in_features=esm_1b_dim, out_features=int(esm_1b_dim /2)),
             nn.ReLU(),
-            nn.Linear(in_features=esm_1b_dim, out_features=esm_1b_dim),
+            nn.Linear(in_features=int(esm_1b_dim /2), out_features=int(esm_1b_dim /4)),
             nn.ReLU(),
-            nn.Linear(in_features=esm_1b_dim, out_features=1), 
+            nn.Linear(in_features=int(esm_1b_dim /4), out_features=1), 
         )
         self.activation = nn.Sigmoid()
 

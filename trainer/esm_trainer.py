@@ -3,12 +3,12 @@ from sklearn import utils
 import torch
 from abc import abstractmethod
 from numpy import Inf
-from logger.visualization import TensorboardWriter
 from .base_trainer import BaseTrainer
 from utils.utility import inf_loop, MetricTracker
-from models.metric import correct_count, calculatePR
+from models.metric import correct_count, calculatePR, roc_auc
 import numpy as np
 from os.path import join
+import pandas as pd
 
 
 
@@ -145,8 +145,8 @@ class ESMTraniner(BaseTrainer):
         self.model.eval()
         total_loss = 0.0
 
-        correct_output = {'count': 0, 'num': 0,'TP':0, 'TN':0,'FP':0,'FN':0}
-        test_result = {'input': [], 'output':[], 'target': []}       
+        correct_output = {'count': 0, 'num': 0}
+        test_result = {'input':[], 'y_true': [], 'y_pred': [],'y_pred_r':[]}  
 
         with torch.no_grad():
             for batch_idx, (x_input_ids, x_attention_mask, target) in enumerate(self.test_data_loader):
@@ -163,32 +163,42 @@ class ESMTraniner(BaseTrainer):
                 total_loss += loss.item() * batch_size
 
                 y_pred = output.cpu().detach().numpy()
-                y_pred = np.round_(y_pred)
+                # y_pred = np.round_(y_pred)
+                y_pred_r = np.round_(y_pred)
+
                 # print()
                 y_true = np.squeeze(target.cpu().detach().numpy())
-                TP, FP, TN, FN = calculatePR(y_pred, y_true)
+                # TP, FP, TN, FN = calculatePR(y_pred, y_true)
 
 
                 test_result['input'].append(x_input_ids.cpu().detach().numpy())
-                test_result['output'].append(y_pred)
-                test_result['target'].append(y_true)
+                test_result['y_pred'].append(y_pred)
+                test_result['y_true'].append(y_true)
+                test_result['y_pred_r'].append(y_pred_r)
 
-                correct, num = correct_count(y_pred, y_true)
+
+                correct, num = correct_count(y_pred_r, y_true)
                 correct_output['count'] += correct
                 correct_output['num'] += num
-                correct_output['FP'] += FP
-                correct_output['TP'] += FP
-                correct_output['FN'] += FP
-                correct_output['FN'] += FP
+                # correct_output['FP'] += FP
+                # correct_output['TP'] += FP
+                # correct_output['FN'] += FP
+                # correct_output['FN'] += FP
+        test_result_df = pd.DataFrame({'y_pred': list(y_pred.flatten()),
+                                'y_true': list(y_true.flatten()),
+                                   'y_pred_r': list(y_pred_r.flatten())})
+        precision, recall = calculatePR(test_result_df['y_pred_r'].to_list(), test_result_df['y_true'].to_list())
+
+        test_result_df.to_csv(join(self.config._save_dir, 'testdata_predict.csv'), index=False)
         with open(join(self.config._save_dir, 'test_result.pkl'),'wb') as f:
             pickle.dump(test_result, f)
 
         test_output = {'n_samples': len(self.test_data_loader.sampler),
                        'total_loss': total_loss,
                        'accuracy': correct_output['count'] / correct_output['num'],
-                       'precision': correct_output['TP'] / (correct_output['TP'] + correct_output['FP']),
-                       'recall': correct_output['TP'] / (correct_output['TP'] + correct_output['FN'])
-                       }
+                       'precision':precision,
+                       'recall':recall,
+                       'roc_auc': roc_auc(y_pred=test_result_df['y_pred'].to_list(), y_true=test_result_df['y_true'].to_list())}
         return test_output                       
 
     def _progress(self, batch_idx):

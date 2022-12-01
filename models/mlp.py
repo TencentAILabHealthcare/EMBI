@@ -1,5 +1,3 @@
-from cgi import print_arguments
-from doctest import OutputChecker
 from . import base_model
 import torch.nn as nn
 import torch
@@ -23,10 +21,17 @@ class MLP(base_model.BaseModel):
         # print('x',x.shape)
         x = torch.squeeze(x)
 
-        output = self.m(x)
+        for i in range(len(self.m)):
+            # print('i',i)
+            x = self.m[i](x)
+            # print('concated_encoded.shape',concated_encoded.shape)
+            if i == 2:
+                sl_output = x
+        # print('shape of sl_output',sl_output.shape)
+        output = x
         # print('output:',output.shape)
         # output = torch.sum(torch.squeeze(output),axis = 1)
         # print('output sum',output)
         # output = self.activation(output)
         output = torch.squeeze(output)
-        return output
+        return output, sl_output

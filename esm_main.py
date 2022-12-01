@@ -60,7 +60,7 @@ def main(config):
                       valid_data_loader=valid_data_loader,
                       test_data_loader=test_data_loader,
                       lr_scheduler=lr_scheduler)
-    # trainer.train()
+    trainer.train()
 
     """Test."""
     logger = config.get_logger('test')
@@ -68,9 +68,9 @@ def main(config):
     test_metrics = [getattr(module_metric, met) for met in config['metrics']]
 
     # load best checkpoint
-    # resume = str(config.save_dir / 'model_best.pth')
-    # resume = '../Result/checkpoints/ESM-Debug/0805_165059/model_best.pth'
-    resume = config.resume
+    resume = str(config.save_dir / 'model_best.pth')
+    # resume = '../Result/checkpoints/ESM-Immu-Debug/1102_105817/model_best.pth'
+    # resume = config.resume
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
@@ -80,7 +80,8 @@ def main(config):
     log={
         'total_accuracy': test_output['accuracy'],
         'precision':test_output['precision'],
-        'recall': test_output['recall']
+        'recall': test_output['recall'],
+        'roc_auc': test_output['roc_auc']
     }
     logger.info(log)
 
@@ -92,6 +93,8 @@ if __name__ == '__main__':
                       help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str,
                       help='indices of GPUs to enable (default: all)')
+    args.add_argument('-rid', '--run_id', default=None, type=str,
+                      help='run id (default:None)')
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')

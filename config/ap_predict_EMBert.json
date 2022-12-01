@@ -1,5 +1,5 @@
 {
-    "name": "EMBert-Predict-AP-test/Cengji/AP_test",
+    "name": "EMBert-Predict-AP-test/embedding",
     "n_gpu": 1,
     "arch": {
         "type": "EpitopeMHCBert",

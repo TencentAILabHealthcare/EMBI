@@ -25,8 +25,8 @@ def main(config):
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_dataset(valid=True)
-    test_data_loader = data_loader.get_test_dataloader()
-    # test_data_loader = data_loader.split_dataset(test=True)
+    # test_data_loader = data_loader.get_test_dataloader()
+    test_data_loader = data_loader.split_dataset(test=True)
 
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
@@ -71,7 +71,7 @@ def main(config):
 
     # load best checkpoint
     resume = str(config.save_dir / 'model_best.pth')
-    # resume = '../Result/checkpoints/EMBert-BA-AP-Immu/Multimodality/1017_212019/model_best.pth'
+    # resume = '../Result/checkpoints/EMBert-BA-AP-Immu/Multimodality/Retrain/1020_105319/model_best.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']

@@ -32,7 +32,8 @@ class EpitopeMHCBert(nn.Module):
 
         epitope_cls = epitope_encoded[:, 0, :]
         MHC_cls = MHC_encoded[:, 0, :]   
-        concated_encoded = torch.concat((epitope_cls, MHC_cls), dim=1)     
+        concated_encoded = torch.concat((epitope_cls, MHC_cls), dim=1) 
+        # concated_encoded_return =  concated_encoded
         # output = self.decoder(concated_encoded)
         for i in range(len(self.decoder)):
             # print('i',i)
@@ -46,6 +47,7 @@ class EpitopeMHCBert(nn.Module):
         output = self.activation(output)
         output = torch.squeeze(output)
         # print('output_embedding:', output )
+        # print('concated_encoded shape',concated_encoded_return.shape)   
 
         return output, ReLU_output
 

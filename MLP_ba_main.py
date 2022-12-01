@@ -26,7 +26,7 @@ def main(config):
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_dataset(valid=True)
 
-    test_data_loader = data_loader.split_dataset(test=True)
+    test_data_loader = data_loader.get_test_dataloader()
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
         valid_data_loader.sampler.__len__(),
@@ -82,14 +82,14 @@ if __name__ == '__main__':
                       help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str,
                       help='indices of GPUs to enable (default: all)')
-
+    args.add_argument('-rid', '--run_id', default=None, type=str,
+                      help='run id (default:None)')
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
         # CustomArgs(['--d', '--dropout'], type=float, target='arch;args;dropout'),
-        CustomArgs(['--tdf', '--training_data_file'], type=str, target='data_loader;args;training_data_file')
 
     ]
     config = ConfigParser.from_args(args, options)

@@ -11,7 +11,7 @@ class EpitopeMHCBert(nn.Module):
             self.decoder = nn.Sequential(
                 nn.Linear(in_features=emb_dim*2, out_features=emb_dim),
                 nn.ReLU(),
-                nn.Linear(in_features=emb_dim, out_features=1), 
+                nn.Linear(in_features=emb_dim, out_features=1)
             )
         else:
             self.decoder = nn.Sequential(
@@ -19,6 +19,7 @@ class EpitopeMHCBert(nn.Module):
                 nn.ReLU(),
                 nn.Dropout(p=dropout),
                 nn.Linear(in_features=emb_dim, out_features=1), 
+
             )
         self.activation = nn.Sigmoid()
 
@@ -33,14 +34,7 @@ class EpitopeMHCBert(nn.Module):
         epitope_cls = epitope_encoded[:, 0, :]
         MHC_cls = MHC_encoded[:, 0, :]   
 
-        concated_encoded = torch.concat((ba_relu_output, ap_relu_output, epitope_cls, MHC_cls), dim=1)     
-        # output = self.decoder(concated_encoded)
-        # for i in range(len(self.decoder)):
-        #     print('i',i)
-        #     concated_encoded = self.decoder[i](concated_encoded)
-        #     print('concated_encoded.shape',concated_encoded.shape)
-        #     if i == 1:
-        #         ReLU_output = concated_encoded
+        concated_encoded = torch.concat((ba_relu_output, ap_relu_output, epitope_cls, MHC_cls), dim=1) 
         output = self.decoder(concated_encoded)
 
         # output = torch.sum(torch.squeeze(output),axis=1)

@@ -40,8 +40,9 @@ def main(config):
     
     # load best checkpoint
     # resume = str(config.save_dir / 'model_best.pth')
+    resume = '../Result/checkpoints/MLP-Pre-test/0826_193627/model_best.pth'
     logger.info('Loading checkpoint: {} ...'.format(config.resume))
-    checkpoint = torch.load(config.resume)
+    checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
     model.load_state_dict(state_dict)
     model = model.to("cuda")
@@ -55,7 +56,7 @@ def main(config):
             x_input_ids = x_input_ids.to("cuda")
             target = target.to("cuda")
 
-            output = model(x_input_ids)
+            output, _ = model(x_input_ids)
             # print('loss.item:',loss.item())
             # print('output test,', output)
             y_pred = output.cpu().detach().numpy()
@@ -97,7 +98,8 @@ if __name__ == '__main__':
                       help='indices of GPUs to enable (default: all)')
     args.add_argument('-local_rank', '--local_rank', default=None, type=str,
                       help='local rank for nGPUs training')
-
+    args.add_argument('-rid', '--run_id', default=None, type=str,
+                      help='run id (default:None)')
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [

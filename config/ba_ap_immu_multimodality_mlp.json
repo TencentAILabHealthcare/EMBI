@@ -1,0 +1,90 @@
+{
+    "name": "MLP-BA-AP-Immu/One_hot",
+    "n_gpu": 1,
+    "arch": {
+        "type": "MLP",
+        "args": {
+            "input_dim":2636,
+            "output_dim":1
+        }
+    },
+    "arch_ba": {
+        "type": "MLP",
+        "args": {
+            "input_dim":2436,
+            "output_dim":1
+        }
+    },
+
+    "arch_ap": {
+        "type": "MLP",
+        "args": {
+            "input_dim":2436,
+            "output_dim":1
+        }
+    },
+
+    "arch_ba_ap": {
+        "type": "EpitopeMHCMLP",
+        "args": {
+            "input_dim": 2,
+            "output_dim": 1
+        }
+    },
+
+    "arch_immu": {
+        "type": "EpitopeMHCBert",
+        "args": {
+            "EpitopeBert_dir": "/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909",
+            "MHCBert_dir":"../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909",
+            "emb_dim": 768,
+            "dropout":0.8
+        }
+    },
+
+    "data_loader": {
+        "type": "MLPDataLoader",
+        "args":{
+            "data_dir": "./data/raw_data/",
+            "batch_size": 256,
+            "seed": 10,
+            "validation_split": 0.1,
+            "test_split": 0.0,
+            "shuffle":true,
+            "num_workers":1,
+            "sampler_type":""
+        }
+    },
+
+    "optimizer": {
+        "type": "AdamW",
+        "args":{
+            "lr": 0.0001,
+            "weight_decay": 0.1
+        }
+    },
+    "loss": "BCELoss",
+    "metrics": [
+        "accuracy_sample"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 10,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+        "ba_model_resume":"/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Result/checkpoints/MLP_test/1103_114328/model_best.pth",
+        "ap_model_resume":"/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Result/checkpoints/MLP-Pre-test/0826_193627/model_best.pth",
+        "ba_ap_model_resume":"/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Result/checkpoints/EMBert-BA-AP/1014_204231/model_best.pth",
+        "immu_model_resume":"/aaa/louisyuzhao/project2/immuneDataSet/yixinguo/Result/checkpoints/EMBert-Immu-Data-test/Balanced_WCE/1011_205942/model_best.pth",
+        "save_dir": "../Result/",
+        "save_period": 200,
+        "verbosity": 2,
+        "monitor": "min val_loss",
+        "early_stop": 10,
+        "tensorboard": true
+    }
+}

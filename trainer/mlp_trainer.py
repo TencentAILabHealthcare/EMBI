@@ -54,7 +54,7 @@ class MLPTrainer(BaseTrainer):
 
             # print('target',target.shape)
             self.optimizer.zero_grad()
-            output = self.model(x_input_ids)
+            output,_ = self.model(x_input_ids)
             # print('model', self.model.m[0].weight)
             # output = torch.unsqueeze(output, 1)
             # print('output',output.shape)
@@ -113,7 +113,7 @@ class MLPTrainer(BaseTrainer):
                 x_input_ids = x_input_ids.to(self.device)
                 target = target.to(self.device)
 
-                output = self.model(x_input_ids)
+                output,_ = self.model(x_input_ids)
                 loss = self.criterion(output, target)      
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
@@ -152,7 +152,7 @@ class MLPTrainer(BaseTrainer):
                 x_input_ids = x_input_ids.to(self.device)
                 target = target.to(self.device)
 
-                output = self.model(x_input_ids)
+                output,_ = self.model(x_input_ids)
                 loss = self.criterion(output, target)
 
                 # print('loss.item:',loss.item())
@@ -181,6 +181,9 @@ class MLPTrainer(BaseTrainer):
         test_result_df = pd.DataFrame({'y_pred': list(y_pred.flatten()),
                                 'y_true': list(y_true.flatten()),
                                    'y_pred_r': list(y_pred_r.flatten())})
+                                   
+        test_result_df.to_csv(join(self.config._save_dir, 'testdata_predict.csv'), index=False)
+
         precision, recall = calculatePR(test_result_df['y_pred_r'].to_list(), test_result_df['y_true'].to_list())
         with open(join(self.config._save_dir, 'test_result.pkl'),'wb') as f:
             pickle.dump(test_result, f)

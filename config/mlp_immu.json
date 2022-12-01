@@ -1,11 +1,12 @@
 {
-    "name": "MLP-Immu-Debug",
+    "name": "MLP-Immu-Debug/WCE/",
     "n_gpu": 1,
 
     "arch": {
         "type": "MLP",
         "args": {
-            "input_dim":2320,
+            "input_dim":1160,
+
             "output_dim":1
         }
     },
@@ -17,8 +18,10 @@
             "batch_size": 256,
             "seed": 10,
             "validation_split": 0.1,
-            "test_split": 0.2,
-            "training_data_file":"PRIME_data_for_benchmark.csv"
+            "test_split": 0.0,
+            "shuffle":true,
+            "num_workers":1,
+            "sampler_type":""
         }
     },
     "optimizer": {
@@ -28,7 +31,7 @@
             "weight_decay": 0
         }
     },
-    "loss": "BCELoss",
+    "loss": "BCELoss_weighted",
     "metrics": [
         "accuracy_sample"
     ],

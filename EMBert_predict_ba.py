@@ -48,7 +48,7 @@ def main(config):
     model.eval()
     logger.info("Starting predict.")
     correct_output = {'count': 0, 'num': 0}
-    test_result = {'input': [], 'output':[], 'target': [], 'output_r':[],'Epitope':[], 'MHC':[]}       
+    test_result = {'input': [], 'output':[], 'target': [], 'output_r':[],'Epitope':[], 'MHC':[], 'ReLU_ouput':[], 'concated_encoded':[]}       
     with torch.no_grad():
         for (epitope_tokenized, MHC_tokenized, target) in tqdm(test_data_loader):
             # print('batch_idx', batch_idx)
@@ -56,12 +56,14 @@ def main(config):
             MHC_tokenized = {k:v.to("cuda") for k,v in MHC_tokenized.items()}                
             target = target.to("cuda")
             
-            output = model(epitope_tokenized, MHC_tokenized)
+            output, ReLU_output, concated_encoded = model(epitope_tokenized, MHC_tokenized)
             epitope_str = epitope_tokenizer.batch_decode(epitope_tokenized['input_ids'], skip_special_tokens=True)
             epitope_nospace = [s.replace(" ","") for s in epitope_str]
             MHC_str = MHC_tokenizer.batch_decode(MHC_tokenized['input_ids'], skip_special_tokens=True)
             MHC_nospace = [s.replace(" ","") for s in MHC_str]
 
+            ReLU_output = ReLU_output.cpu().detach().numpy()
+            concated_encoded = concated_encoded.cpu().detach().numpy()
 
             y_pred = output.cpu().detach().numpy()
             y_pred_r = np.round_(y_pred)
@@ -74,7 +76,8 @@ def main(config):
             test_result['output_r'].append(y_pred_r)
             test_result['Epitope'].append(epitope_nospace)
             test_result['MHC'].append(MHC_nospace)
-
+            test_result['ReLU_ouput'].append(ReLU_output)
+            test_result['concated_encoded'].append(concated_encoded)
 
             correct, num = correct_count(y_pred_r, y_true)
             correct_output['count'] += correct
@@ -86,16 +89,22 @@ def main(config):
     y_pred_r = np.concatenate(test_result['output_r'])
     epitope_input = np.concatenate(test_result['Epitope'])
     MHC_input = np.concatenate(test_result['MHC'])
+    ReLU_output = np.concatenate(test_result['ReLU_ouput'])
+    concated_encoded = np.concatenate(test_result['concated_encoded'])
+    # print('ReLU_output shape', ReLU_output.shape)
 
     test_result_df = pd.DataFrame({
         'Epitope':list(epitope_input.flatten()),
         'MHC':list(MHC_input.flatten()),
         'EMBert_y_pred': list(y_pred.flatten()),
         'y_true': list(y_true.flatten()),
-        'EMBert_y_pred_r': list(y_pred_r.flatten())})
-
+        'EMBert_y_pred_r': list(y_pred_r.flatten())
+        })
+  
     test_result_df.to_csv(join(config.save_dir, 'predict.csv'), index=False)
- 
+    np.save(join(config.save_dir, 'embedding'), ReLU_output)
+    np.save(join(config.save_dir, 'concated_encoded'), concated_encoded)
+
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='PyTorch Template')

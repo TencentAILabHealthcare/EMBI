@@ -58,12 +58,12 @@ class EpitopeMHCTraniner(BaseTrainer):
             self.optimizer.zero_grad()
 
             
-            output = self.model(epitope_tokenized, MHC_tokenized)
+            output, _ = self.model(epitope_tokenized, MHC_tokenized)
             # output = torch.unsqueeze(output, 1)
             # print('output',output.shape)
             # target shape: [batch_size,], output shape: [batch_size, 920, 1]
             
-            loss = self.criterion(output, target, class_weights=[1,6])
+            loss = self.criterion(output, target)
             # loss = loss.to(self.device)
             loss.backward()
             self.optimizer.step()
@@ -118,7 +118,7 @@ class EpitopeMHCTraniner(BaseTrainer):
                 MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
+                output, _ = self.model(epitope_tokenized, MHC_tokenized)
                 loss = self.criterion(output, target)      
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
@@ -157,7 +157,7 @@ class EpitopeMHCTraniner(BaseTrainer):
                 MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}                
                 target = target.to(self.device)
 
-                output = self.model(epitope_tokenized, MHC_tokenized)
+                output,_ = self.model(epitope_tokenized, MHC_tokenized)
                 loss = self.criterion(output, target)
                 # print('loss.item:',loss.item())
                 # print('output test,', output)

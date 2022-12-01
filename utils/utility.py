@@ -49,7 +49,7 @@ def prepare_device(n_gpu_use):
     return device, list_ids
 
 def encode_seq(sequence):
-    alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y','X']
     char_to_int = dict((c, i) for i, c in enumerate(alphabet))
     integer_encoded = [char_to_int[char] for char in sequence]
     onehot_encoded = list()
@@ -65,7 +65,7 @@ def encode_24(seq):
     left = encode_seq(seq[:12])
     right = encode_seq(seq[-12:])
     if len(seq) < 12:
-        middle = np.zeros((24-len(seq) * 2, 20), dtype='int32')
+        middle = np.zeros((24-len(seq) * 2, 21), dtype='int32')
         merge = np.concatenate((left, middle, right), axis=0)
     else:
         merge = np.concatenate((left, right), axis=0)
@@ -75,14 +75,14 @@ def encode_24_blosum50(seq, blosum50_dict):
     left = encode_seq_blosum50(seq[:12], blosum50_dict)
     right = encode_seq_blosum50(seq[-12:],blosum50_dict)
     if len(seq) < 12:
-        middle = np.zeros((24-len(seq) * 2, 20), dtype='int32')
+        middle = np.zeros((24-len(seq) * 2, 21), dtype='int32')
         merge = np.concatenate((left, middle, right), axis=0)
     else:
         merge = np.concatenate((left, right), axis=0)
     return merge
 
 def encode_seq_blosum50(seq, blosum50_dict):
-    alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    alphabet = ['A', 'C', 'D', 'E', 'F', 'G','H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y','X']
     result = np.zeros((len(seq), len(alphabet)), dtype='int32')
     for i,s in enumerate(list(seq)):
         for j, a in enumerate(alphabet):
