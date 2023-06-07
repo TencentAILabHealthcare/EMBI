@@ -1,6 +1,6 @@
 # EMBI
 Epitope-MHC-Bert-Immunogenicity (EMBI) is a comprehensive deep learning framework designed to predict the immunogenicity of epitope peptides. This prediction paradigm utilizes two pre-trained Bidirectional Encoder Representations from Transformers (BERTs), one trained on epitope sequences and the other on MHC-I pseudo-sequences. The models are subsequently fine-tuned on task-specific data, such as peptide-MHC binding, pMHC presentation, and TCR recognition.
-![image](https://github.com/MoPie/EMBI_test/blob/master/workflow/workflow.jpg)
+![image](https://github.com/TencentAILabHealthcare/EMBI/blob/master/workflow/workflow.jpg)
 ## Setup and Installation
 To ensure the successful execution of the EMBI, the installation of necessary packages is crucial. This can be achieved with the following command:
 ```bash
