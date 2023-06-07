@@ -1,0 +1,61 @@
+{
+    "name": "EMBert-Predict-AP_predict",
+    "n_gpu": 1,
+    "arch": {
+        "type": "EpitopeMHCBert",
+        "args": {
+            "EpitopeBert_dir": "EpitopeBert",
+            "MHCBert_dir":"MHCBert",
+            "emb_dim": 768,
+            "dropout":""
+        }
+    },
+
+    "data_loader": {
+        "type": "EpitopeMHCBertDataLoader",
+        "args":{
+            "data_dir": "./data/raw_data/",
+            "batch_size": 16384,
+            "seed": 10,
+            "epitope_vocab_dir": "",
+            "MHC_vocab_dir":"",
+            "shuffle":true,
+            "epitope_tokenizer_dir":"EpitopeBert",
+            "MHC_tokenizer_dir":"MHCBert",
+            "epitope_max_seq_length": 20,
+            "MHC_max_seq_length":34,
+            "predict_file":""
+        }
+    },
+
+    "optimizer": {
+        "type": "AdamW",
+        "args":{
+            "lr": 0.0001,
+            "weight_decay": 0.1
+        }
+    },
+    "loss": "BCELoss",
+    "metrics": [
+        "accuracy_sample"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 10,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+
+        "save_dir": "../Result/",
+        "save_period": 200,
+        "verbosity": 2,
+        
+        "monitor": "min val_loss",
+        "early_stop": 10,
+
+        "tensorboard": true
+    }
+}

@@ -1,94 +1,45 @@
-## Project: BERT model for epitope immunogenicity prediction
-This project is developed and maintained by @yixinguo and @owenbhe, supervised by @jianhuayao.
-
-## Code structure
-Note the data, result and OtherFolder folders are not shown in git.woa.com since these files are too large.
-
-* `./OtherFolder/Benchmark/` includes the result of benchmark
-    * `./CD8_benchamrk_pred` netMHCpan prediction result, processing steps can be found in `./benchmark.ipynb`.
-    * `./Figures` contains benchmark result.
-    * `./IEDB_ligand_benchmark_result` contains benchmark reuslt using IEDB test data.
-
-* `./OtherFolder/Data` includes some independent data from database, recent paper ...
-    * `./ARTEMIS` MASS-spec data from Finton, Kathryn AK, et al. "ARTEMIS: A Novel Mass-Spec Platform for HLA-Restricted Self and Disease-Associated Peptide Discovery." Frontiers in Immunology 12 (2021): 658372.
-    * `./COVID-19` covid-19 eptioep data from IEDB
-    * `./data` netmhcpan training data
-    * `./dbPepNeo2.0` human tumor neoantigen peptides, from Lu, Manman, et al. "dbPepNeo2. 0: A Database for Human Tumor Neoantigen Peptides From Mass Spectrometry and TCR Recognition." Frontiers in immunology (2022): 1583.
-    * `./DeepImmuno` DeepImmuno project, from https://github.com/frankligy/DeepImmuno
-    * `./Figure` contains model performance result, processing steps can be found in `../process_data.ipynb`
-    * `./FromZhao` model prediction result using data from louisyuzhao
-    * `./IEDB` data downloaded from IEDB
-    * `./INeo_epp`  data from Wang, Guangzhi, et al. "INeo-Epp: a novel T-cell HLA class-I immunogenicity or neoantigenic epitope prediction method based on sequence-related amino acid features." BioMed research international 2020 (2020).
-    * `./MHCflurry` data from O’Donnell, Timothy J., Alex Rubinsteyn, and Uri Laserson. "MHCflurry 2.0: improved pan-allele prediction of MHC class I-presented peptides by incorporating antigen processing." Cell systems 11.1 (2020): 42-48.
-    * `./NetMHCpan_train` data from netmhcpan
-    * `./TESLA` data from Wells, Daniel K., et al. "Key parameters of tumor epitope immunogenicity revealed through a consortium approach improve neoantigen prediction." Cell 183.3 (2020): 818-834.
-    * `./Zhao_2018_PLoS_computational_biology` data were used to benchmark binding affinity predictor, from Zhao, Weilong, and Xinwei Sher. "Systematically benchmarking peptide-MHC binding predictors: From synthetic to naturally processed epitopes." PLoS computational biology 14.11 (2018): e1006457.
-    * `./process_data.ipynb` includes scripts processing data and data visualization
-    * `./produce_figure.ipynb` includes scripts generating figures in paper
-
-* `./Result/` includes the result of each experiment.
-    * `./checkpoints/` includes the checkpoint and configuration of each experiment.
-    * `./datasplit/` includes the configuration, log file and results for each experiment.
-
-* `./`
-    * `./bert_data_prepare` contains the tokenizer building code.
-    * `./config` contains the configuration files for each experiment.
-    * `./data` includes the data files from IEDB, recent studies ...
-        * `./figures` contains predict probability distribution for each experiment.
-        * `./processed_data` includes the processed data, the processing steps can be found in `./Data/process_data.ipynb`. These dataset were generated for model embeddings visualization
-        * `./raw_data` includes the data for model, the processing steps can be found in `./Data/process_data.ipynb`.
-            * `./All_epitope_HLA_pseduo_seq` contains all eptiope and HLA pairs without PRIME epitopes, these data are used to generate pseduo label data.
-            * `./BA_AP_data`  these data are used to generate pseduo label data.
-            * `./Cancer_antigenic` these data are downloaded from https://caped.icp.ucl.ac.be/Peptide/list.
-            * `./IEDB_MS_data` these data are downloaded from IEDB(mass spectrometry), for AP predictor benchmark.
-            * `./MTL_data` these data are used for multi task learning model, pseudo label data.
-        * `xxxx_dataset.py` these files are used for PyTorch DataLoader builiding for each experiment.             
-    * `./logger/` contains the codes for logging, no need to change if not necessary.
-    * `./model/` contains the codes for the architecture of each model.
-    * `./trainer/` contains the trainer design for each experiment.
-    * `xxxxx_main.py` these files are used to run each experiments.
-
-
-
-## How to run
-Use the self-supervised learning on the MHC pseudo sequence with common tokenizer (unique amino acid as one token) as an example, to run the code, please use the following command
+# EMBI
+Epitope-MHC-Bert-Immunogenicity (EMBI) is a comprehensive deep learning framework designed to predict the immunogenicity of epitope peptides. This prediction paradigm utilizes two pre-trained Bidirectional Encoder Representations from Transformers (BERTs), one trained on epitope sequences and the other on MHC-I pseudo-sequences. The models are subsequently fine-tuned on task-specific data, such as peptide-MHC binding, pMHC presentation, and TCR recognition.
+![image](https://github.com/MoPie/EMBI_test/blob/master/workflow/workflow.jpg)
+## Setup and Installation
+To ensure the successful execution of the EMBI, the installation of necessary packages is crucial. This can be achieved with the following command:
+```bash
+pip install -r requirements.txt
+```
+## Hardware and Software Requirements
+The proposed model's computational effectiveness was assessed on a high-performance computing workstation comprising the following specifications: dual RTX 3090 graphics processing units, an i9-10920X processor, 128 GB of system memory, and a cumulative 48 GB graphics processing memory. This model operates under the Ubuntu operating system, version 18.04.
+## Training and Utilization of EMBI
+EMBI's training for peptide immunogenicity prediction involves the Masked Amino Acid (MAA) task. The specifics of each training are found in the `./config` folder. 
+### 1. Masked Amino Acid task
+The Masked Amino Acid task constitutes a self-supervised learning process for EpitopeBert and MHCBert, using a common tokenizer (each unique amino acid represents a token). This must be executed initially. 
+Use the following command to generate the pre-trained model of epitope sequences:
 ```bash
 python bert_pretrain_maa_main.py --config config/bert_pretrain_maa_common_MHC.json
 ```
-
-## The dependencies of multi-tasks
-1. Masked Amino Acid task
-
-The masked amino acid task is self-supervised learning task of EpitopeBert and MHCBert, which needs to be trained first.
-* Using the following command to get the pre-trained model of epitope sequences, and the pre-trained model is saved in its corresponding folder under `../Result/checkpoints/` folder (such as `/aaa/louisyuzhao/project2/immuneDataSet/jasonjnyang/Epitope-receptor-generative/Result/checkpoints/BERT-Epitope-Pretrain-Common-MAA/0816_171909`).
+To obtain the pre-trained model of MHC pseudo sequences, use this command:
 ```bash
 python bert_pretrain_maa_main.py --config config/bert_pretrain_maa_common_MHC.json
 ```
-* Using the following command to get the pre-trained model of MHC pseudo sequences, and the pre-trained model is saved in its corresponding folder under `../Result/checkpoints/` folder (such as `../Result/checkpoints/BERT-MHC-Pretrain-Common-MAA/0824_163909`).
-```bash
-python bert_pretrain_maa_main.py --config config/common/bert_pretrain_maa_common_beta.json
-```
-2. Binding Affinity Prediction task
-
-After the MAA training, we utilize the pre-trained models to initialize EpitopeBert and MHCBert and fine-tune on the binding affinity prediction task. Using the following command to get the fine-tuned model. Note that you need to change the settings `"EpitopeBert_dir"` and `"ReceptorBert_dir"` in the config file (such as `config/common/bert_finetuning_er_main.json`) using the path of the pre-trained models of EpitopeBert and MHCBert. The fine-tuned model is saved in its corresponding folder under `../Result/checkpoints/`, such as `../Result/checkpoints/Epitope-MHC-Debug/0909_125043`.
-```bash
-python EMBert_ba_main.py --config config/EMBert_ba.json
-```
-
-3. Antigen Presentation Prediction task
-
-After the MAA training, we utilize the pre-trained models to initialize EpitopeBert and MHCBert and fine-tune on the antigen presentation prediction task. Using the following command to get the fine-tuned model. Note that you need to change the settings `"EpitopeBert_dir"` and `"ReceptorBert_dir"` in the config file (such as `config/common/bert_finetuning_er_main.json`) using the path of the pre-trained models of EpitopeBert and MHCBert. The fine-tuned model is saved in its corresponding folder under `../Result/checkpoints/`, such as `../Result/checkpoints/EMBert-Pre-Debug/0828_214943`.
-```bash
-python EMBert_ap_main.py --config config/EMBert_ap.json
-```
-
-4. Immunogenicity Prediction task
-After the BA and AP predictor training, we utilize the pre-trained models to initialize EpitopeBert and MHCBert and fine-tune on the immunogenicity prediction task with BA and AP embedding. Using the following command to get the fine-tuned model. Note that you need to change the settings `"EpitopeBert_dir"` and `"ReceptorBert_dir"` in the config file (such as `config/common/bert_finetuning_er_main.json`) using the path of the pre-trained models of EpitopeBert and MHCBert. The fine-tuned model is saved in its corresponding folder under `../Result/checkpoints/`, such as `../Result/checkpoints/EMBert-BA-AP-Immu/Multimodality/1018_144215`.
-```bash
-python EMBert_BA_AP_Immu_multimodality_main.py --config config/ba_ap_immu_multimodality.json
-```
-
-## Environment
-* All the codes and experiments are developed under `python==3.10.4`.
-* Full dependencies are saved in `requirement.txt`. Using `pip` to install all these packages is recommended.
-* GPU support: Taiji platform.
+### 2. Utilization
+We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alternatively, EMBI can predict exogenous peptides directly. The fine-tuning steps are detailed below:
+#### 1). Fine-tune EMBI
+ Prior to fine-tuning, ensure to replace some related paths in the `./config/EMBI_multimodality_training.json` and `EMBI_multimodality_predict.json` files. In particular, substitute "EpitopeBert_dir" and "MHCBert_dir" using model trained above. The fine-tuning command is:
+ ```bash
+ python EMBI_BA_AP_Immu_multimodality_main.py --config ./config/EMBI_multimodality_training.json
+ ```
+ Following fine-tuning, the model will be saved in the `../Result/checkpoints/XXX_XXXX` directory.
+ #### 2). Peptide immunogenicity prediction
+ Before running peptide prediction, replace the paths in the `./config/EMBI_multimodality_predict.json` file. Substitute "resume" with `../Result/checkpoints/XXX_XXXX`. The command is: 
+ ```bash
+ python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json
+ ```
+ ### 3. Expected output
+ Subsequent to pre-training and fine-tuning, EMBI generates a CSV file named predict.csv. This file includes five columns: peptide, MHC, binding_affinity_probability (ba_p), antigen_presentation_probability (ap_p), and immunogenicity_probability (Immu_pred).
+## Model availability
+The pre-trianed model EpitopeBert and MHCBert and EMBI trained models on binding, antigen presentation and immunogenicity prediction task are available on [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing). 
+## Data availability
+The training and test data utilized in this project are available in the `./data/raw_data` directory. The file `Epitope_BA_data.csv` is used for binding affinity task training, `MHCflurry_BA_training_data.csv` for antigen presentation task training and `Epitope_info_from_PRIME.csv` for immunogenicity prediction task training. Additional files are employed to evaluate our model in comparison with other models. To access the demo data, please download [the demo data via google drive](https://drive.google.com/file/d/1XoEf914xjskOHRw94afrnXSU3vJj0G47/view?usp=sharing). Then you can directly run the model following above instructions.
+## Contact
+For further queries, you can reach out to us via email:
+- [Yixin Guo](mailto:yixinguo.19@intl.zju.edu.cn)
+- [Bing He](mailto:hebinghb@gmail.com)

@@ -15,7 +15,7 @@ class EpitopeMHCTraniner(BaseTrainer):
     """"
     Trainer class
     """
-    def __init__(self, ba_model_resume, ap_model_resume, ba_ap_model_resume, immu_model_resume, model, criterion, metric_fns, optimizer, config,
+    def __init__(self, ba_model_resume, ap_model_resume, model, criterion, metric_fns, optimizer, config,
                 data_loader, valid_data_loader=None, test_data_loader=None,
                 lr_scheduler=None, len_epoch=None):
         super().__init__(model, criterion, metric_fns, optimizer, config)
