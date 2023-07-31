@@ -5,6 +5,7 @@ Epitope-MHC-Bert-Immunogenicity (EMBI) is a comprehensive deep learning framewor
 To ensure the successful execution of the EMBI, the installation of necessary packages is crucial. This can be achieved with the following command:
 ```bash
 git clone https://github.com/TencentAILabHealthcare/EMBI.git
+cd EMBI
 pip install -r requirements.txt
 ```
 ## Hardware and Software Requirements
