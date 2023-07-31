@@ -31,7 +31,7 @@ We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alte
  ```
  Following fine-tuning, the model will be saved in the `../Result/checkpoints/XXX_XXXX` directory.
  #### 2). Peptide immunogenicity prediction
- Before running peptide prediction, download pre-trained model and fine-tuned modole from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) in the current path. The pre-trained models are in `./MHCBert` and `./EpitopeBert` directory. EMBI trained models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. The command is: 
+ Before running peptide prediction, download pre-trained models and fine-tuned models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. The pre-trained models are in `./MHCBert` and `./EpitopeBert` directory. EMBI trained models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. The command is: 
  ```bash
  python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json
  ```
