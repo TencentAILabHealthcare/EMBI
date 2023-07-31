@@ -4,12 +4,13 @@ Epitope-MHC-Bert-Immunogenicity (EMBI) is a comprehensive deep learning framewor
 ## Setup and Installation
 To ensure the successful execution of the EMBI, the installation of necessary packages is crucial. This can be achieved with the following command:
 ```bash
+git clone https://github.com/TencentAILabHealthcare/EMBI.git
 pip install -r requirements.txt
 ```
 ## Hardware and Software Requirements
 The proposed model's computational effectiveness was assessed on a high-performance computing workstation comprising the following specifications: dual RTX 3090 graphics processing units, an i9-10920X processor, 128 GB of system memory, and a cumulative 48 GB graphics processing memory. This model operates under the Ubuntu operating system, version 18.04.
 ## Training and Utilization of EMBI
-EMBI's training for peptide immunogenicity prediction involves the Masked Amino Acid (MAA) task. The specifics of each training are found in the `./config` folder. 
+EMBI's training for peptide immunogenicity prediction involves the Masked Amino Acid (MAA) task. The specifics of each training are found in the `./config` folder.
 ### 1. Masked Amino Acid task
 The Masked Amino Acid task constitutes a self-supervised learning process for EpitopeBert and MHCBert, using a common tokenizer (each unique amino acid represents a token). This must be executed initially. 
 Use the following command to generate the pre-trained model of epitope sequences:
@@ -29,7 +30,7 @@ We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alte
  ```
  Following fine-tuning, the model will be saved in the `../Result/checkpoints/XXX_XXXX` directory.
  #### 2). Peptide immunogenicity prediction
- Before running peptide prediction, replace the paths in the `./config/EMBI_multimodality_predict.json` file. Substitute "resume" with `../Result/checkpoints/XXX_XXXX`. The command is: 
+ Before running peptide prediction, download pre-trained model and fine-tuned modole from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) in the current path. The pre-trained models are in `./MHCBert` and `./EpitopeBert` directory. EMBI trained models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. The command is: 
  ```bash
  python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json
  ```
