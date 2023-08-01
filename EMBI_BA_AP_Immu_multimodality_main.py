@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import data.EMBert_ba_ap_dataset as module_data
+import data.train_immu_multimodality_dataset as module_data
 import models.epitope_mhc_bert_multimodality as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
