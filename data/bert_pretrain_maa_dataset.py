@@ -97,9 +97,7 @@ class MAADataset(object):
 
         self.logger.info('Start creating tokenizer...')
         self.tokenizer = get_tokenizer(tokenizer_name=tokenizer_name,
-                                       logger=self.logger,
-                                       vocab_dir=vocab_dir,
-                                       token_length_list=token_length_list)
+                                       logger=self.logger)
         self.split_fun = self.tokenizer.split
 
         if max_len is None:
