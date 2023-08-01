@@ -116,6 +116,8 @@ if __name__ == '__main__':
                       help='indices of GPUs to enable (default: all)')
     args.add_argument('-local_rank', '--local_rank', default=None, type=str,
                       help='local rank for nGPUs training')
+    args.add_argument('-rid', '--run_id', default=None, type=str,
+                      help='run id (default:None)')
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
