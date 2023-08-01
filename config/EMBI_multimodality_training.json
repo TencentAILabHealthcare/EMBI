@@ -56,6 +56,8 @@
             "seed": 3407,
             "validation_split": 0.1,
             "test_split": 0.5,
+            "epitope_vocab_dir": "",
+            "MHC_vocab_dir":"",
             "epitope_tokenizer_dir":"EpitopeBert",
             "MHC_tokenizer_dir":"MHCBert",
             "epitope_max_seq_length": 20,
