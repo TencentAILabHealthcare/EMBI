@@ -51,12 +51,12 @@ def main(config):
     ba_model_resume = config['trainer']['ba_model_resume']
     ap_model_resume = config['trainer']['ap_model_resume']
 
-    ba_ap_model_resume = config['trainer']['ba_ap_model_resume']
-    immu_model_resume = config['trainer']["immu_model_resume"]
+    # ba_ap_model_resume = config['trainer']['ba_ap_model_resume']
+    # immu_model_resume = config['trainer']["immu_model_resume"]
 
 
-    trainer = Trainer(ba_model_resume, ap_model_resume, ba_ap_model_resume, 
-                      immu_model_resume, model, criterion, metrics, optimizer,
+    trainer = Trainer(ba_model_resume, ap_model_resume, 
+                      model, criterion, metrics, optimizer,
                       config=config,
                       data_loader=data_loader,
                       valid_data_loader=valid_data_loader,
