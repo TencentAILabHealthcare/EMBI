@@ -19,7 +19,7 @@ class EpitopeMHCBertDataset(Dataset):
         self.epitope = original_data[0]
         self.MHC = original_data[1]
         self.binder = original_data[2]
-        self.source = original_data[3]
+        # self.source = original_data[3]
         self.epitope_tokenizer = epitope_tokenizer
         self.MHC_tokenizer = MHC_tokenizer
         self.epitope_split_fun = epitope_split_fun
@@ -37,9 +37,9 @@ class EpitopeMHCBertDataset(Dataset):
         epitope = self.epitope[index]
         MHC = self.MHC[index]
         binder = self.binder[index]
-        source = self.source[index]
+        # source = self.source[index]
         binder_tensor = torch.tensor(self.binder[index], dtype=torch.float32)
-        source_tensor = torch.tensor(source, dtype=torch.float32)
+        # source_tensor = torch.tensor(source, dtype=torch.float32)
         epitope_tensor = self.epitope_tokenizer(
             self._insert_whitespace(self.epitope_split_fun(epitope)),
             truncation=True,
@@ -65,7 +65,7 @@ class EpitopeMHCBertDataset(Dataset):
             self.logger.info(f"Example of label: {binder} -> {binder_tensor}")
             self._has_logged_example = True
 
-        return epitope_tensor, MHC_tensor, binder_tensor, source_tensor                             
+        return epitope_tensor, MHC_tensor, binder_tensor                             
 
     def _insert_whitespace(self, token_list):
         """
@@ -127,7 +127,7 @@ class EpitopeMHCBertDataLoader(BaseDataLoader):
 
         self.train_dataset = self._prepare_dataset(self.epitope_BA_df)
         self.logger.info('Load train dataset successfully')
-        super().__init__(self.train_dataset, batch_size, seed, validation_split, test_split, sampler_type, num_workers)
+        super().__init__(self.train_dataset, batch_size, seed, validation_split, test_split, shuffle, sampler_type, num_workers)
         
         ### test_dataset
         print('test_df',self.test_df.shape)
@@ -149,8 +149,8 @@ class EpitopeMHCBertDataLoader(BaseDataLoader):
         data_x_epitopes = Epitope_BA_df_random['Epitope'].to_list()
         data_MHC_pseduo_seq = Epitope_BA_df_random['HLA_pseudo_seq'].to_list()
         data_Binder = [int(float(i)) for i in Epitope_BA_df_random['Binder'].to_list()]
-        data_source = [int(i) for i in Epitope_BA_df_random['source'].to_list()]
-        return data_x_epitopes, data_MHC_pseduo_seq, data_Binder, data_source
+        # data_source = [int(i) for i in Epitope_BA_df_random['source'].to_list()]
+        return data_x_epitopes, data_MHC_pseduo_seq, data_Binder
 
     def _prepare_dataset(self, epitope_BA_df):
              
