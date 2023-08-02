@@ -21,7 +21,7 @@ class EpitopeMHCBertDataset(Dataset):
         self.binder = original_data[2]
         # keep HLA name
         self.HLA_name = original_data[3]
-        self.ID = original_data[4]
+        # self.ID = original_data[4]
         # self.target = original_data[4]
         self.epitope_tokenizer = epitope_tokenizer
         self.MHC_tokenizer = MHC_tokenizer
@@ -68,7 +68,7 @@ class EpitopeMHCBertDataset(Dataset):
         HLA_name = self.HLA_name[index]
         # for covid_19
         # target = self.target[index]
-        ID = self.ID[index]
+        # ID = self.ID[index]
         return epitope_tensor, MHC_tensor, binder_tensor, HLA_name, ID                    
 
     def _insert_whitespace(self, token_list):
@@ -152,8 +152,8 @@ class EpitopeMHCBertDataLoader(object):
         data_Binder = [0] * Epitope_BA_df.shape[0]
         # data_Binder = [int(float(i)) for i in Epitope_BA_df_random['Binder'].to_list()]
         data_HLA_name = Epitope_BA_df_random['Allele'].to_list()
-        data_ID = Epitope_BA_df_random['ID'].to_list()
-        return data_x_epitopes, data_MHC_pseduo_seq, data_Binder, data_HLA_name, data_ID
+        # data_ID = Epitope_BA_df_random['ID'].to_list()
+        return data_x_epitopes, data_MHC_pseduo_seq, data_Binder, data_HLA_name
         
     def get_predict_dataset(self):
         df = self.predict_df    
