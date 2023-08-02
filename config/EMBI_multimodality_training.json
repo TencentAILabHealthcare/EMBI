@@ -88,7 +88,7 @@
     "trainer": {
         "epochs": 50,
         "ba_model_resume":"EMBI_BA_model/model_best.pth",
-        "ap_model_resume":"EMBI_AP_semi/model_best.pth",
+        "ap_model_resume":"EMBI_AP_semi_model/model_best.pth",
         "save_dir": "../Result/",
         "save_period": 200,
         "verbosity": 2,
