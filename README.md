@@ -4,6 +4,8 @@ Epitope-MHC-Bert-Immunogenicity (EMBI) is a comprehensive deep learning framewor
 ## Setup and Installation
 To ensure the successful execution of the EMBI, the installation of necessary packages is crucial. This can be achieved with the following command:
 ```bash
+conda create -n EMBI python=3.10
+conda activate EMBI
 git clone https://github.com/TencentAILabHealthcare/EMBI.git
 cd EMBI
 pip install -r requirements.txt
@@ -16,7 +18,7 @@ EMBI's training for peptide immunogenicity prediction involves the Masked Amino 
 The Masked Amino Acid task constitutes a self-supervised learning process for EpitopeBert and MHCBert, using a common tokenizer (each unique amino acid represents a token). This must be executed initially. 
 Use the following command to generate the pre-trained model of epitope sequences:
 ```bash
-python bert_pretrain_maa_main.py --config config/bert_pretrain_maa_common_MHC.json
+python bert_pretrain_maa_main.py --config config/bert_pretrain_maa_common_Epitope.json
 ```
 To obtain the pre-trained model of MHC pseudo sequences, use this command:
 ```bash
