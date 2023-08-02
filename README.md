@@ -33,7 +33,7 @@ We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alte
  #### 2). Peptide immunogenicity prediction
  Before running peptide prediction, download pre-trained models and fine-tuned models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. The pre-trained models are in `./MHCBert` and `./EpitopeBert` directory. EMBI trained models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. The command is: 
  ```bash
- python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json
+ python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json --pf peptide_prediction_demo.csv
  ```
  ### 3. Expected output
  Subsequent to pre-training and fine-tuning, EMBI generates a CSV file named predict.csv. This file includes five columns: peptide, MHC, binding_affinity_probability (ba_p), antigen_presentation_probability (ap_p), and immunogenicity_probability (Immu_pred).
