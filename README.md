@@ -27,13 +27,13 @@ python bert_pretrain_maa_main.py --config config/bert_pretrain_maa_common_MHC.js
 ### 2. Utilization
 We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alternatively, EMBI can predict exogenous peptides directly. The fine-tuning steps are detailed below:
 #### 1). Fine-tune EMBI
- Prior to fine-tuning, ensure to replace some related paths in the `./config/EMBI_multimodality_training.json` and `EMBI_multimodality_predict.json` files. In particular, substitute "EpitopeBert_dir" and "MHCBert_dir" using model trained above. The fine-tuning command is:
+ Prior to fine-tuning, ensure to replace some related paths in the `./config/EMBI_multimodality_training.json` and `EMBI_multimodality_predict.json` files. Download pre-trained models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. The pre-trained models are in ./MHCBert and ./EpitopeBert directory.The fine-tuning command is:
  ```bash
  python EMBI_BA_AP_Immu_multimodality_main.py --config ./config/EMBI_multimodality_training.json
  ```
  Following fine-tuning, the model will be saved in the `../Result/checkpoints/XXX_XXXX` directory.
  #### 2). Peptide immunogenicity prediction
- Before running peptide prediction, download pre-trained models and fine-tuned models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. The pre-trained models are in `./MHCBert` and `./EpitopeBert` directory. EMBI trained models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. The command is: 
+ Before running peptide prediction, download fine-tuned models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. EMBI trained models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. The command is: 
  ```bash
  python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json --pf peptide_prediction_demo.csv
  ```
