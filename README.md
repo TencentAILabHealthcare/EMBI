@@ -24,19 +24,25 @@ To obtain the pre-trained model of MHC pseudo sequences, use this command:
 ```bash
 python bert_pretrain_maa_main.py --config config/bert_pretrain_maa_common_MHC.json
 ```
+The pre-trained model will be saved in `../Result/checkpoints/MHCBert_Pretrian` and `../Result/checkpoints/EpitopeBert_Pretrain` directory. 
 ### 2. Utilization
 We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alternatively, EMBI can predict exogenous peptides directly. The fine-tuning steps are detailed below:
 #### 1). Fine-tune EMBI
- Prior to fine-tuning, ensure to replace some related paths in the `./config/EMBI_multimodality_training.json` and `EMBI_multimodality_predict.json` files. Download pre-trained models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. The pre-trained models are in ./MHCBert and ./EpitopeBert directory.The fine-tuning command is:
+ Prior to fine-tuning, ensure to replace some related paths in the `./config/EMBI_multimodality_training.json` and `./config/EMBI_multimodality_predict.json` files. In detail, please replace the "epitope_tokenizer_dir" and "EpitopeBert_dir" using ../Result/checkpoints/EpitopeBert_Pretrain/XXXX_XXXXXX; replace the "MHC_tokenizer_dir" and "MHCBert_dir" using ../Result/checkpoints/MHCBert_Pretrian/XXXX_XXXXXX in these two files. The fine-tuning command is:
  ```bash
  python EMBI_BA_AP_Immu_multimodality_main.py --config ./config/EMBI_multimodality_training.json
  ```
- Following fine-tuning, the model will be saved in the `../Result/checkpoints/XXX_XXXX` directory.
+ Following fine-tuning, the model will be saved in the `../Result/checkpoints/EMBert-BA-AP-Immu-Training/` directory.
  #### 2). Peptide immunogenicity prediction
- Before running peptide prediction, download fine-tuned models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. EMBI trained models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. The command is: 
+ Before running peptide prediction, download fine-tuned models for binding affinity and antigen presentation prediction from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing) and place them in the current path. EMBI trained models are in `./EMBI_BA_model` and `./EMBI_AP_semi_model`directory and the whole directory should be downloaded. Then assign the `resume` variable in the `EMBI_BA_AP_Immu_multimodality_predict.py` files with ../Result/checkpoints/EMBert-BA-AP-Immu-Training/xxx.pth. The command is: 
  ```bash
  python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json --pf peptide_prediction_demo.csv
  ```
+ If you want to skip the pre-training process, download pre-trained models and fine-tuned models from [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing). The pre-trained models are in the `./EpitopeBert` and `./MHCBert` directory. The fine-tuned models are in `./EMBI_BA_model`, `./EMBI_AP_semi_model` and `./EMBI_multimodality_model` directory. Please replace the "epitope_tokenizer_dir" and "EpitopeBert_dir" using ./EpitopeBert; replace the "MHC_tokenizer_dir" and "MHCBert_dir" using ./MHCBert; replace the `resume`  variable in the `EMBI_BA_AP_Immu_multimodality_predict.py` files with `./EMBI_multimodality_model/model_best.pth`. The predict command is:
+ ```bash
+ python EMBI_BA_AP_Immu_multimodality_predict.py --config ./config/EMBI_multimodality_predict.json --pf peptide_prediction_demo.csv
+ ```
+ `peptide_prediction_demo.csv` should be placed in the `./data/raw_data` directory.
  ### 3. Expected output
  Subsequent to pre-training and fine-tuning, EMBI generates a CSV file named predict.csv. This file includes five columns: peptide, MHC, binding_affinity_probability (ba_p), antigen_presentation_probability (ap_p), and immunogenicity_probability (Immu_pred).
 ## Model availability
