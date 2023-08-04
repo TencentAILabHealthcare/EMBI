@@ -28,7 +28,7 @@ The pre-trained model will be saved in `../Result/checkpoints/MHCBert_Pretrian` 
 ### 2. Utilization
 We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alternatively, EMBI can predict exogenous peptides directly. The fine-tuning steps are detailed below:
 #### 1). Fine-tune EMBI
- Prior to fine-tuning, ensure to replace some related paths in the `./config/EMBI_multimodality_training.json` and `./config/EMBI_multimodality_predict.json` files. In detail, please replace the "epitope_tokenizer_dir" and "EpitopeBert_dir" using ../Result/checkpoints/EpitopeBert_Pretrain/XXXX_XXXXXX; replace the "MHC_tokenizer_dir" and "MHCBert_dir" using ../Result/checkpoints/MHCBert_Pretrian/XXXX_XXXXXX in these two files. XXXX_XXXXXX is the appropriate model identifier based on when you ran the model. The fine-tuning command is:
+ Prior to fine-tuning, ensure to replace some related paths in the `./config/EMBI_multimodality_training.json` and `./config/EMBI_multimodality_predict.json` files. In detail, please assign the "epitope_tokenizer_dir" and "EpitopeBert_dir" with ../Result/checkpoints/EpitopeBert_Pretrain/XXXX_XXXXXX; assign the "MHC_tokenizer_dir" and "MHCBert_dir" with ../Result/checkpoints/MHCBert_Pretrian/XXXX_XXXXXX in these two files. XXXX_XXXXXX is the appropriate model identifier based on when you ran the model. The fine-tuning command is:
  ```bash
  python EMBI_BA_AP_Immu_multimodality_main.py --config ./config/EMBI_multimodality_training.json
  ```
@@ -44,7 +44,7 @@ We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alte
  ```
  `peptide_prediction_demo.csv` should be placed in the `./data/raw_data` directory.
  ### 3. Expected output
- Subsequent to pre-training and fine-tuning, EMBI generates a CSV file named predict.csv. This file includes five columns: peptide, MHC, binding_affinity_probability (ba_p), antigen_presentation_probability (ap_p), and immunogenicity_probability (Immu_pred).
+ Subsequent to pre-training and fine-tuning, EMBI generates a CSV file named predict.csv. This file includes five columns: peptide, MHC, binding_affinity_probability (ba_p), antigen_presentation_probability (ap_p), and immunogenicity_probability (Immu_pred). This file will be in the `./Result/checkpoints/EMBert-BA-AP-Immu-Predict/XXX_XXX/predict.csv`.
 ## Model availability
 The pre-trianed model EpitopeBert and MHCBert and EMBI trained models on binding, antigen presentation and immunogenicity prediction task are available on [google drive](https://drive.google.com/drive/folders/1PcfRcw0nIeUsDAg-f0AVxAgBFgqKpJ3i?usp=sharing). 
 ## Data availability
