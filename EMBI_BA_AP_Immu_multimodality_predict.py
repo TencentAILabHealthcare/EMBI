@@ -133,9 +133,10 @@ def main(config):
         'HLA':list(hla_name.flatten()),
         'ba_p':list(ba_p.flatten()),
         'ap_p':list(ap_p.flatten()),
-        'Immu_pred': list(y_pred.flatten()),
-        'y_true': list(y_true.flatten()),
-        'Immu_y_pred_r': list(y_pred_r.flatten())})
+        'Immu_pred': list(y_pred.flatten())
+        # 'y_true': list(y_true.flatten()),
+        # 'Immu_y_pred_r': list(y_pred_r.flatten())
+    })
 
     test_result_df.to_csv(join(config.save_dir, 'predict.csv'), index=False)
     print('correct_output', correct_output)
