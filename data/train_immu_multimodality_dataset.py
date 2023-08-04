@@ -139,8 +139,8 @@ class EpitopeMHCBertDataLoader(BaseDataLoader):
         return self.test_dataloader
 
     def _load_data(self):
-        Epitope_BA_df = pd.read_csv(join(self.data_dir, '20221014el_ba_immu_merge_data.csv'),dtype=str)
-        test_df = pd.read_csv(join(self.data_dir, '20221011_ba_ap_immu_test_data.csv'),dtype=str)
+        Epitope_BA_df = pd.read_csv(join(self.data_dir, 'fine_tune_data_train.csv'),dtype=str)
+        test_df = pd.read_csv(join(self.data_dir, 'fine_tune_data_test.csv'),dtype=str)
         return Epitope_BA_df, test_df
     
     def _process_BA_df(self, Epitope_BA_df):
