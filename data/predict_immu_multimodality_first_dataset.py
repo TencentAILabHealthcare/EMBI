@@ -69,7 +69,7 @@ class EpitopeMHCBertDataset(Dataset):
         # for covid_19
         # target = self.target[index]
         # ID = self.ID[index]
-        return epitope_tensor, MHC_tensor, binder_tensor, HLA_name, ID                    
+        return epitope_tensor, MHC_tensor, binder_tensor, HLA_name                  
 
     def _insert_whitespace(self, token_list):
         """
