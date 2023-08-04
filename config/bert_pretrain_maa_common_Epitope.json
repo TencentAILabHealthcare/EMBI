@@ -1,5 +1,5 @@
 {
-    "name": "BERT-MHC-Pretrain-Common-MAA",
+    "name": "EpitopeBert_Pretrain",
     "n_gpu": 1,
 
     "dataset": {
