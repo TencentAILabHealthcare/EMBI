@@ -48,7 +48,7 @@ We recommend the use of EMBI on a cancer peptide dataset after fine-tuning. Alte
 ## Model availability
 The pre-trianed model EpitopeBert and MHCBert and EMBI trained models on binding, antigen presentation and immunogenicity prediction task are available on [zenodo](https://zenodo.org/records/12561108?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImE4ODE0ZGM2LWQzMWMtNGFiYS04MDBkLTJhODc0NzFlZWE3MCIsImRhdGEiOnt9LCJyYW5kb20iOiI3MmJjYTkzMDJjYWU3MTZiMjQzZmE1OTIyODQzZGVmNCJ9.HCLhQvucZAbO1_ifHk89GlTJ6YT52w42Bw1w8dkKo8iEZI5GqPML1SUiQGx9PAhuEOiWquuPf0FN1LSQ_pcXCQ).. 
 ## Data availability
-The training and test data utilized in this project are available in [the dataset via zenodo](https://zenodo.org/records/12801495?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjRlZmVlYTljLTU3MTAtNGU5YS1iYzYxLTNkNjQyZTY4MzM4OSIsImRhdGEiOnt9LCJyYW5kb20iOiJjZTFlNjVjYzAxODY4NjA0MzgxNzYyYWQzNzdmYjQ5NCJ9.wlS6wLdZday_l2gmAvvxMZIu0jwm_HRfVQa6gqc7DS-dueb898KaGywdxW91NJK9GSfKLT8XDxVr0xH9RRXp-g). Then you can directly run the model following above instructions.
+The training and test data utilized in this project are available in [datasets via zenodo](https://zenodo.org/records/12801495?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjRlZmVlYTljLTU3MTAtNGU5YS1iYzYxLTNkNjQyZTY4MzM4OSIsImRhdGEiOnt9LCJyYW5kb20iOiJjZTFlNjVjYzAxODY4NjA0MzgxNzYyYWQzNzdmYjQ5NCJ9.wlS6wLdZday_l2gmAvvxMZIu0jwm_HRfVQa6gqc7DS-dueb898KaGywdxW91NJK9GSfKLT8XDxVr0xH9RRXp-g). Then you can directly run the model following above instructions.
 ## Contact
 For further queries, you can reach out to us via email:
 - [Yixin Guo](mailto:yixinguo.19@intl.zju.edu.cn)
