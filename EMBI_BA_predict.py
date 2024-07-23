@@ -38,7 +38,9 @@ def main(config):
     logger = config.get_logger('Predict')
 
     # load best checkpoint
-    resume = '../Result/checkpoints/Epitope-MHC-Debug/0907_143655/model_best.pth'
+    # resume = '../Result/checkpoints/Epitope-MHC-Debug/0907_143655/model_best.pth'
+    resume = './EMBI_BA_model/model_best.pth'
+    # resume = '/slurm/home/yrd/liulab/guolinnan/Result/checkpoints/Epitope-BA-Training/ba_ft_gamma08/ba_ft_bs16_lr1e5/checkpoint-epoch1.pth'
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
@@ -50,20 +52,23 @@ def main(config):
     correct_output = {'count': 0, 'num': 0}
     test_result = {'input': [], 'output':[], 'target': [], 'output_r':[],'Epitope':[], 'MHC':[], 'ReLU_ouput':[], 'concated_encoded':[]}       
     with torch.no_grad():
-        for (epitope_tokenized, MHC_tokenized, target) in tqdm(test_data_loader):
+        for (epitope_tokenized, MHC_tokenized, target, hla_name) in tqdm(test_data_loader):
             # print('batch_idx', batch_idx)
             epitope_tokenized = {k:v.to("cuda") for k,v in epitope_tokenized.items()}
-            MHC_tokenized = {k:v.to("cuda") for k,v in MHC_tokenized.items()}                
-            target = target.to("cuda")
+            MHC_tokenized = {k:v.to("cuda") for k,v in MHC_tokenized.items()}  
+            # print(type(target),target)
+            target = torch.Tensor(target).to("cuda")
             
-            output, ReLU_output, concated_encoded = model(epitope_tokenized, MHC_tokenized)
+            # output, ReLU_output, concated_encoded = model(epitope_tokenized, MHC_tokenized)
+            output, ReLU_output = model(epitope_tokenized, MHC_tokenized)
+            
             epitope_str = epitope_tokenizer.batch_decode(epitope_tokenized['input_ids'], skip_special_tokens=True)
             epitope_nospace = [s.replace(" ","") for s in epitope_str]
             MHC_str = MHC_tokenizer.batch_decode(MHC_tokenized['input_ids'], skip_special_tokens=True)
             MHC_nospace = [s.replace(" ","") for s in MHC_str]
 
             ReLU_output = ReLU_output.cpu().detach().numpy()
-            concated_encoded = concated_encoded.cpu().detach().numpy()
+            # concated_encoded = concated_encoded.cpu().detach().numpy()
 
             y_pred = output.cpu().detach().numpy()
             y_pred_r = np.round_(y_pred)
@@ -77,7 +82,7 @@ def main(config):
             test_result['Epitope'].append(epitope_nospace)
             test_result['MHC'].append(MHC_nospace)
             test_result['ReLU_ouput'].append(ReLU_output)
-            test_result['concated_encoded'].append(concated_encoded)
+            # test_result['concated_encoded'].append(concated_encoded)
 
             correct, num = correct_count(y_pred_r, y_true)
             correct_output['count'] += correct
@@ -90,7 +95,7 @@ def main(config):
     epitope_input = np.concatenate(test_result['Epitope'])
     MHC_input = np.concatenate(test_result['MHC'])
     ReLU_output = np.concatenate(test_result['ReLU_ouput'])
-    concated_encoded = np.concatenate(test_result['concated_encoded'])
+    # concated_encoded = np.concatenate(test_result['concated_encoded'])
     # print('ReLU_output shape', ReLU_output.shape)
 
     test_result_df = pd.DataFrame({
@@ -102,8 +107,8 @@ def main(config):
         })
   
     test_result_df.to_csv(join(config.save_dir, 'predict.csv'), index=False)
-    np.save(join(config.save_dir, 'embedding'), ReLU_output)
-    np.save(join(config.save_dir, 'concated_encoded'), concated_encoded)
+    # np.save(join(config.save_dir, 'embedding'), ReLU_output)
+    # np.save(join(config.save_dir, 'concated_encoded'), concated_encoded)
 
 
 if __name__ == '__main__':
@@ -123,7 +128,10 @@ if __name__ == '__main__':
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
         CustomArgs(['--s', '--seed'], type=int, target='data_loader;args;seed'),
-        CustomArgs(['--pf', '--predict_file'], type=str, target='data_loader;args;predict_file')
+        CustomArgs(['--pf', '--predict_file'], type=str, target='data_loader;args;predict_file'),
+
     ]
     config = ConfigParser.from_args(args, options)
+    
+    
     main(config)

@@ -1,12 +1,15 @@
 import torch
 import torch.nn as nn
-from transformers import BertModel
+# from transformers import BertModel
+from .BertModel_Noise import BertModelNoise
+
+
 
 class EpitopeMHCBert(nn.Module):
-    def __init__(self, EpitopeBert_dir, MHCBert_dir, emb_dim, dropout):
+    def __init__(self, EpitopeBert_dir, MHCBert_dir, emb_dim, dropout, Add_noise_sep = 5, aug_N = 2, aug_M = 10, kernel_set = 0):
         super().__init__()
-        self.EpitopeBert = BertModel.from_pretrained(EpitopeBert_dir)
-        self.MHCBert = BertModel.from_pretrained(MHCBert_dir)
+        self.EpitopeBert = BertModelNoise.from_pretrained(EpitopeBert_dir)
+        self.MHCBert = BertModelNoise.from_pretrained(MHCBert_dir)
         if dropout == "":
             self.decoder = nn.Sequential(
                 nn.Linear(in_features=emb_dim*2, out_features=emb_dim),
@@ -22,12 +25,15 @@ class EpitopeMHCBert(nn.Module):
 
             )
         self.activation = nn.Sigmoid()
-
-
-    
-    def forward(self, ba_relu_output, ap_relu_output,epitope, MHC):
-        epitope_encoded = self.EpitopeBert(**epitope).last_hidden_state
-        MHC_encoded = self.MHCBert(**MHC).last_hidden_state
+        self.Add_noise_sep = Add_noise_sep
+        self.aug_N = aug_N
+        self.aug_M = aug_M
+        self.kernel_set = kernel_set
+        
+    def forward(self, ba_relu_output, ap_relu_output,epitope, MHC, batch_idx = 1, transform_proportion = 0.0):
+        noise_add_position = "BeforeBert" if batch_idx % self.Add_noise_sep == 0 else None
+        epitope_encoded = self.EpitopeBert(**epitope,noise_add_position = noise_add_position, noise_add_params = [self.aug_N,self.aug_M],transform_proportion=transform_proportion).last_hidden_state
+        MHC_encoded = self.MHCBert(**MHC,noise_add_position = noise_add_position, noise_add_params = [self.aug_N,self.aug_M],transform_proportion=transform_proportion).last_hidden_state
         # print('x_input_ids',x_input_ids.shape)
         # print('x_attention_mask',x_attention_mask.shape)
 

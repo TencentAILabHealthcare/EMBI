@@ -1,7 +1,8 @@
 import torch
 import numpy as np
-import data.EMBert_ap_dataset as module_data
-import models.epitope_mhc_bert as module_arch
+import data.train_immu_multimodality_dataset as module_data
+# import data.train_ap_dataset_EMBert as module_data
+import models.epitope_mhc_bert_noise_train as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
 import transformers
@@ -24,7 +25,8 @@ def main(config):
     # setup data_loader instances
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
-    valid_data_loader = data_loader.split_dataset(valid=True)
+    # train_data_loader = data_loader.get_train_dataloader()
+    valid_data_loader = data_loader.split_dataset(test=True)
     test_data_loader = data_loader.get_test_dataloader()
 
     
@@ -38,13 +40,18 @@ def main(config):
     model = config.init_obj('arch', module_arch)
 
     # get function handles of loss and metrics
+
     criterion = getattr(module_loss, config['loss'])
     metrics = [getattr(module_metric, met) for met in config['metrics']]   
     logger.info(model)
 
     trainable_params = model.parameters()
     optimizer = config.init_obj('optimizer', transformers, trainable_params)
-    lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    # lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    if config["lr_scheduler"]["type"] == "StepLR":
+        lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    else:
+        lr_scheduler = config.init_obj('lr_scheduler', transformers, optimizer)
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
@@ -91,7 +98,13 @@ if __name__ == '__main__':
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
-        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size')
+        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
+        CustomArgs(['--sep', '--add_noise_sep'], type=int, target='arch;args;Add_noise_sep'),
+        CustomArgs(['--d', '--dropout'], type=float, target='arch;args;dropout'),
+        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay'),
+        CustomArgs(['--ks', '--kernel_set'], type=int, target='arch;args;kernel_set'),
+        
+        
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

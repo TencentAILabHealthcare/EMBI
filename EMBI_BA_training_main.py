@@ -1,6 +1,8 @@
 import torch
 import numpy as np
-import data.EMBert_ba_dataset as module_data
+import data.train_immu_multimodality_dataset as module_data
+# import data.train_ba_dataset_EMBert as module_data
+
 import models.epitope_mhc_bert as module_arch
 import models.loss as module_loss
 import models.metric as module_metric
@@ -24,7 +26,7 @@ def main(config):
     # setup data_loader instances
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
-    valid_data_loader = data_loader.split_dataset(valid=True)
+    valid_data_loader = data_loader.split_dataset(test=True)
     test_data_loader = data_loader.get_test_dataloader()
 
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
@@ -60,7 +62,10 @@ def main(config):
 
     trainable_params = model.parameters()
     optimizer = config.init_obj('optimizer', transformers, trainable_params)
-    lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    if config["lr_scheduler"]["type"] == "StepLR":
+        lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    else:
+        lr_scheduler = config.init_obj('lr_scheduler', transformers, optimizer)
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
@@ -100,6 +105,8 @@ if __name__ == '__main__':
                       help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str,
                       help='indices of GPUs to enable (default: all)')
+    args.add_argument('-rid', '--run_id', default=None, type=str,
+                      help='run id (default:None)')
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
@@ -111,4 +118,6 @@ if __name__ == '__main__':
         CustomArgs(['--ft', '--freeze_top'], type=int, target='freeze_top')
     ]
     config = ConfigParser.from_args(args, options)
+    
+    
     main(config)

@@ -38,7 +38,7 @@ class BaseTrainer:
         else:
             # mnt_mode determines minimum or maximum metrix is best, if we use loss, thus mnt_mode = min
             self.mnt_mode, self.mnt_metric = self.monitor.split()
-            assert self.mnt_mode in ['min', 'max']
+            assert self.mnt_mode in ['min', 'max', 'off']
 
             self.mnt_best = inf if self.mnt_mode == 'min' else -inf
             self.early_stop = cfg_trainer.get('early_stop', inf)
@@ -65,20 +65,35 @@ class BaseTrainer:
         """
         not_improved_count = 0
         for epoch in range(self.start_epoch, self.epochs + 1):
-            result = self._train_epoch(epoch)
+            # result = self._train_epoch(epoch)
+            result,test_result = self._train_epoch(epoch)
+            
 
             # save logger informations into log dict
             log = {'epoch': epoch}
             log.update(result)
+            log.update(test_result)
 
             # print logged informations to the screen
             self.logger.info('epoch:{}'.format(epoch))
             for key in ['train','validation']:
                 if key not in log:
                     continue
-                value_format = ''.join(['{:15s}: {:.2f}\t'.format(k, v) for k, v in log[key].items()])
-                self.logger.info('    {:15s}: {}'.format(str(key), value_format))
+                value_format = ''.join(['{:25s}: {:.2f}\t'.format(k, v) for k, v in log[key].items()])
+                self.logger.info('    {:25s}: {}'.format(str(key), value_format))
+            for key in ['train','validation']:
+                if key not in log:
+                    continue
+                
+                for k in log[key].keys():
+                    
+                    self.writer.add_scalar(tag = '{}/{}'.format(k[4:] if k.startswith('val_') else k,key),data = log[key][k],)
 
+            if test_result:
+                value_format = ''.join(['{:25s}: {:.2f}\t'.format(k, v) for k, v in test_result.items()])
+                self.logger.info('    {:25s}: {}'.format('test', value_format))
+                for k in test_result:
+                    self.writer.add_scalar(tag = '{}/test'.format(k),data = test_result[k])
             # evaluate model performance according to configured metric, save best checkpoint as model_best
             best = False
             if self.mnt_mode != 'off':
@@ -91,6 +106,7 @@ class BaseTrainer:
                                         "Model performance monitoring is disabled.".format(self.mnt_metric))
                     self.mnt_mode = 'off'
                     improved = False
+                    self.logger.info("==== improved: ",improved)
                 if improved:
                     self.mnt_best = log[self.mnt_metric]
                     not_improved_count = 0
@@ -103,9 +119,11 @@ class BaseTrainer:
                     self.logger.info("Validation performance didn\'t improve for {} epochs. "
                                      "Training stops.".format(self.early_stop))
                     break
+                    
+                
             
             if epoch % self.save_period == 0:
-                self._save_chekpiont(epoch, save_best=False)
+                self._save_checkpoint(epoch, save_best=False)
 
 
     def _prepare_device(self, n_gpu_use):

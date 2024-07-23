@@ -52,10 +52,10 @@
         "type": "EpitopeMHCBertDataLoader",
         "args":{
             "data_dir": "./data/raw_data/",
-            "batch_size": 64,
+            "batch_size": 128,
             "seed": 3407,
             "validation_split": 0.1,
-            "test_split": 0.5,
+            "test_split": 0.1,
             "epitope_vocab_dir": "",
             "MHC_vocab_dir":"",
             "epitope_tokenizer_dir":"EpitopeBert",
@@ -63,7 +63,9 @@
             "epitope_max_seq_length": 20,
             "MHC_max_seq_length":34,
             "num_workers":1,
-            "sampler_type":""
+            "sampler_type":"",
+            "train_dir":"",
+            "test_dir":""
         }
     },
 
@@ -94,6 +96,7 @@
         "verbosity": 2,
         "monitor": "min val_loss",
         "early_stop": 10,
+        "transform_proportion":0.2,
         "tensorboard": true
     }
 }

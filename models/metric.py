@@ -4,6 +4,7 @@ import itertools
 from tkinter.tix import Tree
 import numpy as np
 from sklearn import metrics
+
 import json
 import pandas as pd
 
@@ -19,7 +20,9 @@ def accuracy_sample(y_pred, y_true):
     # y_pred = y_pred.argmax(axis=2)
     # print('y_pred:', y_pred)
     # print('y_true:', y_true)
-    return metrics.accuracy_score(y_pred=y_pred, y_true=y_true, normalize=True, sample_weight=None)
+    if type(y_pred) != np.ndarray:
+        y_pred = np.array(y_pred)
+    return metrics.accuracy_score(y_pred=y_pred.reshape(y_pred.size), y_true=y_true.reshape(y_true.size), normalize=True, sample_weight=None)
 
 
 def accuracy_amino_acid(y_pred, y_true):
@@ -42,7 +45,17 @@ def correct_count(y_pred, y_true):
         y_pred (numpy.array): shape [batch_size, seq_len, ntoken]
         y_true (numpy.array): shape [batch_size, seq_len]
     '''
-    return (y_pred == y_true).sum(), len(y_true)
+    # print(type(y_pred), type(y_true),y_true)
+    if not isinstance(y_true, np.ndarray):
+        y_pred = np.array(list(y_pred))
+    try:
+        y_true = np.asarray(y_true)
+        len_of_y_true = len(np.asarray(y_true)) if y_true.ndim != 0 else 1
+    except Exception as e:
+        print(f"Error converting y_true to array: {e}")
+        len_of_y_true = 1
+    # len_of_y_true = len(y_true) if y_true.size != () else 1
+    return (y_pred == y_true).sum(), len_of_y_true
 
 def correct_predictions(output_probabilities, targets):
 
@@ -60,7 +73,23 @@ def calculatePR(y_pred, y_true):
     FN = np.sum(np.logical_and(np.equal(y_true, 1), np.equal(y_pred, 0)))
     precision = TP/(TP+FP)
     recall = TP/(TP+FN)
-    return precision, recall   
+    return precision, recall
+
+def calculate_AUC(probability, target):
+    fpr, tpr, thresholds = metrics.roc_curve(y_score= np.array(probability), y_true= np.array(target), pos_label=1)
+    AUC = metrics.auc(fpr, tpr)
+    return AUC
+
+def calculate_AUPRC(probability, target):
+    precision, recall, thresholds = metrics.precision_recall_curve(probas_pred= np.array(probability), y_true= np.array(target), pos_label=1)
+    # print('recall', recall)
+    # print('precision',precision)
+    AUPRC = metrics.auc(recall, precision)
+    average_precision = metrics.average_precision_score(y_true=np.array(target), y_score=np.array(probability))
+    return AUPRC
+
+def calculateMCC(y_pred,y_true):
+    return metrics.matthews_corrcoef(y_true, y_pred)
 
 
 def roc_auc(y_pred, y_true):

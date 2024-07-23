@@ -24,9 +24,9 @@ def main(config):
     # setup data_loader instances
     config['data_loader']['args']['logger'] = logger
     data_loader = config.init_obj('data_loader', module_data)
-    valid_data_loader = data_loader.split_dataset(valid=True)
-    # test_data_loader = data_loader.get_test_dataloader()
-    test_data_loader = data_loader.split_dataset(test=True)
+    valid_data_loader = data_loader.split_dataset(test=True)
+    test_data_loader = data_loader.get_test_dataloader()
+    # test_data_loader = data_loader.split_dataset(test=True)
 
     logger.info('Number of pairs in train: {}, valid: {}, and test: {}'.format(
         data_loader.sampler.__len__(),
@@ -35,7 +35,11 @@ def main(config):
     ))
 
     # ntoken = 33
+    
     model = config.init_obj('arch', module_arch)
+    
+    # if base model is given, fine-tune on it
+    # Using the code below to fine-tune a exsited model
 
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
@@ -46,14 +50,11 @@ def main(config):
 
     trainable_params = model.parameters()
     optimizer = config.init_obj('optimizer', transformers, trainable_params)
+    # lr_scheduler = config.init_obj('lr_scheduler', transformers, optimizer)
     lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
 
     ba_model_resume = config['trainer']['ba_model_resume']
     ap_model_resume = config['trainer']['ap_model_resume']
-
-    # ba_ap_model_resume = config['trainer']['ba_ap_model_resume']
-    # immu_model_resume = config['trainer']["immu_model_resume"]
-
 
     trainer = Trainer(ba_model_resume, ap_model_resume, 
                       model, criterion, metrics, optimizer,
@@ -61,7 +62,8 @@ def main(config):
                       data_loader=data_loader,
                       valid_data_loader=valid_data_loader,
                       test_data_loader=test_data_loader,
-                      lr_scheduler=lr_scheduler)
+                      lr_scheduler=lr_scheduler,
+                      transform_proportion=config["trainer"]["transform_proportion"])
     trainer.train()
 
     """Test."""
@@ -103,7 +105,9 @@ if __name__ == '__main__':
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
         CustomArgs(['--d', '--dropout'], type=float, target='arch;args;dropout'),
-        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay')
+        CustomArgs(['--wd', '--weight_decay'], type=float, target='optimizer;args;weight_decay'),
+        CustomArgs(['--sep', '--add_noise_sep'], type=int, target='arch;args;Add_noise_sep'),
+        CustomArgs(['--tp', '--transform_proportion'], type=float, target='trainer;transform_proportion'),
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

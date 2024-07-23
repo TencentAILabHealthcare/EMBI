@@ -9,8 +9,6 @@ from os.path import join
 import numpy as np
 from models.metric import correct_count
 
-
-
 class BERTTrainer(BaseTrainer):
 
     def __init__(self, model, ntoken, criterion, metric_fns, optimizer, config,

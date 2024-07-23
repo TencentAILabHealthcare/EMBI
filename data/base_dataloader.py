@@ -56,7 +56,6 @@ class BaseDataLoader(DataLoader):
         else:
             len_valid = int(self.n_samples * self.validation_split)
             len_test = int(self.n_samples * self.test_split)
-        print('len_valid',len_valid)
         valid_idx = idx_full[0:len_valid]
         test_idx = idx_full[len_valid:(len_valid+len_test)]
         train_idx = np.delete(idx_full, np.arange(0, len_valid+len_test))
@@ -111,11 +110,11 @@ class BaseDataLoader(DataLoader):
         
     def split_dataset(self, valid=False, test=False):
         if valid:
-            assert len(self.valid_sampler) != 0, "validation set size ratio is not positive"
-            return DataLoader(sampler=self.valid_sampler, **self.init_kwargs)
+            assert len(self.valid_sampler) >= 0, "validation set size ratio is not positive"
+            return DataLoader(sampler=self.valid_sampler, **self.init_kwargs) if len(self.valid_sampler) != 0 else None
         if test:
-            assert len(self.test_sampler) != 0, "test set size ratio is not positive"
-            return DataLoader(sampler=self.test_sampler, **self.init_kwargs)    
+            assert len(self.test_sampler) >= 0, "test set size ratio is not positive"
+            return DataLoader(sampler=self.test_sampler, **self.init_kwargs) if len(self.test_sampler) != 0 else None
     
 
     

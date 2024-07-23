@@ -149,9 +149,10 @@ class EpitopeMHCBertDataLoader(object):
         Epitope_BA_df_random = Epitope_BA_df
         data_x_epitopes = Epitope_BA_df_random['Epitope'].to_list()
         data_MHC_pseduo_seq = Epitope_BA_df_random['HLA_pseudo_seq'].to_list()
-        data_Binder = [0] * Epitope_BA_df.shape[0]
-        # data_Binder = [int(float(i)) for i in Epitope_BA_df_random['Binder'].to_list()]
+        # data_Binder = [0] * Epitope_BA_df.shape[0]
+        data_Binder = [int(float(i)) for i in Epitope_BA_df_random['Binder'].to_list()]
         data_HLA_name = Epitope_BA_df_random['Allele'].to_list()
+        # data_HLA_name = [''] * Epitope_BA_df.shape[0]
         # data_ID = Epitope_BA_df_random['ID'].to_list()
         return data_x_epitopes, data_MHC_pseduo_seq, data_Binder, data_HLA_name
         

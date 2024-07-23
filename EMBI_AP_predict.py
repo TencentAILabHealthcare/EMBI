@@ -12,6 +12,9 @@ import argparse
 import collections
 from parse_config import ConfigParser
 from tqdm import tqdm
+# import models.epitope_mhc_bert as module_arch_
+
+
 
 def main(config):
     
@@ -38,35 +41,42 @@ def main(config):
     logger = config.get_logger('Predict')
 
     # load best checkpoint
-    resume = '../Result/checkpoints/EMBert-AP-Data-Augmentation/0914_144510/model_best.pth'
+    resume = "EMBI_AP_semi_model/model_best.pth"
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
+    # for name, param in model.named_parameters():
+    #     print(name,param.size())
+    print(model)
     model.load_state_dict(state_dict)
     model = model.to("cuda")
 
     model.eval()
     logger.info("Starting predict.")
     correct_output = {'count': 0, 'num': 0}
-    test_result = {'input': [], 'output':[], 'target': [], 'output_r':[],'Epitope':[], 'MHC':[],'ReLU_ouput':[], 'concated_encoded':[]}       
+    test_result = {'input': [], 'output':[], 'target': [], 'output_r':[],'Epitope':[], 'MHC':[],'ReLU_ouput':[], 'concated_encoded':[]} 
+    # test_result = {'input': [], 'output':[], 'output_r':[],'Epitope':[], 'MHC':[],'ReLU_ouput':[], 'concated_encoded':[]} 
     with torch.no_grad():
-        for (epitope_tokenized, MHC_tokenized, target) in tqdm(test_data_loader):
+        for (epitope_tokenized, MHC_tokenized, target, hla_name) in tqdm(test_data_loader):
             # print('batch_idx', batch_idx)
             # print('target', target)
             epitope_tokenized = {k:v.to("cuda") for k,v in epitope_tokenized.items()}
-            MHC_tokenized = {k:v.to("cuda") for k,v in MHC_tokenized.items()}                
-            target = target.to("cuda")
+            MHC_tokenized = {k:v.to("cuda") for k,v in MHC_tokenized.items()}
+            target = torch.Tensor(target).to("cuda")
+
+            # target = target.to("cuda")
             # print('target', target)
             
             # output, ReLU_output, concated_encoded = model(epitope_tokenized, MHC_tokenized)
             output, ReLU_output = model(epitope_tokenized, MHC_tokenized)
-            
+            # output = model(epitope_tokenized, MHC_tokenized)
+            print(output)
             epitope_str = epitope_tokenizer.batch_decode(epitope_tokenized['input_ids'], skip_special_tokens=True)
             epitope_nospace = [s.replace(" ","") for s in epitope_str]
             MHC_str = MHC_tokenizer.batch_decode(MHC_tokenized['input_ids'], skip_special_tokens=True)
             MHC_nospace = [s.replace(" ","") for s in MHC_str]
 
-            ReLU_output = ReLU_output.cpu().detach().numpy()
+            # ReLU_output = ReLU_output.cpu().detach().numpy()
             # concated_encoded = concated_encoded.cpu().detach().numpy()
 
             y_pred = output.cpu().detach().numpy()
@@ -81,12 +91,12 @@ def main(config):
             test_result['output_r'].append(y_pred_r)
             test_result['Epitope'].append(epitope_nospace)
             test_result['MHC'].append(MHC_nospace)
-            test_result['ReLU_ouput'].append(ReLU_output)
+            # test_result['ReLU_ouput'].append(ReLU_output)
             # test_result['concated_encoded'].append(concated_encoded)
 
-            correct, num = correct_count(y_pred_r, y_true)
-            correct_output['count'] += correct
-            correct_output['num'] += num
+            # correct, num = correct_count(y_pred_r, y_true)
+            # correct_output['count'] += correct
+            # correct_output['num'] += num
           
 
     y_pred = np.concatenate(test_result['output'])
@@ -94,6 +104,8 @@ def main(config):
     y_pred_r = np.concatenate(test_result['output_r'])
     epitope_input = np.concatenate(test_result['Epitope'])
     MHC_input = np.concatenate(test_result['MHC'])
+    # ReLU_output = np.concatenate(test_result['ReLU_ouput'])
+    # concated_encoded = np.concatenate(test_result['concated_encoded'])
 
     test_result_df = pd.DataFrame({
         'Epitope':list(epitope_input.flatten()),
@@ -128,3 +140,5 @@ if __name__ == '__main__':
     ]
     config = ConfigParser.from_args(args, options)
     main(config)
+    
+    

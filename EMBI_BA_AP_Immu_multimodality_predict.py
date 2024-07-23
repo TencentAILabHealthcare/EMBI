@@ -48,7 +48,8 @@ def main(config):
     # fine-tuned on cancer data 0.4/0.1/0.5 '../Result/checkpoints/EMBert-BA-AP-Immu/Multimodality/Fine_tune_cancer/1117_142620/model_best.pth'
     # fine-tuned on dbpepneo melenoma and tesla negative '../Result/checkpoints/EMBert-BA-AP-Immu/Multimodality/Fine_tune_dppepneo_tesla/1119_163304/model_best.pth'
     # fine-tuned on dbpepneo melenoma and tesla negative seed 3407 '../Result/checkpoints/EMBert-BA-AP-Immu/Multimodality/Fine_tune_dppepneo_tesla/1124_104841/model_best.pth'
-    resume = 'EMBI_multimodality_model/model_best.pth'
+    # resume = 'EMBI_multimodality_model/model_best.pth'
+    resume = config["model_dir"]["immu_model_resume"]
     logger.info('Loading checkpoint: {} ... '.format(resume))
     checkpoint = torch.load(resume)
     state_dict = checkpoint['state_dict']
@@ -133,8 +134,8 @@ def main(config):
         'HLA':list(hla_name.flatten()),
         'ba_p':list(ba_p.flatten()),
         'ap_p':list(ap_p.flatten()),
-        'Immu_pred': list(y_pred.flatten())
-        # 'y_true': list(y_true.flatten()),
+        'Immu_pred': list(y_pred.flatten()),
+        'y_true': list(y_true.flatten()),
         # 'Immu_y_pred_r': list(y_pred_r.flatten())
     })
 
@@ -160,7 +161,7 @@ if __name__ == '__main__':
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
         CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
         CustomArgs(['--s', '--seed'], type=int, target='data_loader;args;seed'),
-        CustomArgs(['--pf', '--predict_file'], type=str, target='data_loader;args;predict_file')
+        CustomArgs(['--pf', '--predict_file'], type=str, target='data_loader;args;predict_file'),
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

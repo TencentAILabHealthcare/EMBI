@@ -2,8 +2,10 @@ import pickle
 import torch
 from .base_trainer import BaseTrainer
 from utils.utility import inf_loop, MetricTracker
-from models.metric import correct_count, calculatePR, roc_auc
-import models.epitope_mhc_bert as module_arch_
+from models.metric import correct_count, calculatePR, roc_auc, calculate_AUPRC, calculateMCC
+import models.epitope_mhc_bert_predict as module_arch_
+import models.epitope_mhc_bert_noise_train as module_arch_ap
+
 # import models.epitope_mhc_bert_multimodality as module_arch_2
 import numpy as np
 from os.path import join
@@ -17,14 +19,14 @@ class EpitopeMHCTraniner(BaseTrainer):
     """
     def __init__(self, ba_model_resume, ap_model_resume, model, criterion, metric_fns, optimizer, config,
                 data_loader, valid_data_loader=None, test_data_loader=None,
-                lr_scheduler=None, len_epoch=None):
+                lr_scheduler=None, len_epoch=None,transform_proportion=0.2):
         super().__init__(model, criterion, metric_fns, optimizer, config)
         self.config = config
         self.data_loader = data_loader
         # self.ba_model_resume = ba_model_resume
         # self.ap_model_resume = ap_model_resume
         self.ba_model = config.init_obj('arch_ba', module_arch_)
-        self.ap_model = config.init_obj('arch_ap', module_arch_)
+        self.ap_model = config.init_obj('arch_ap', module_arch_ap)
         # self.ba_ap_model = config.init_obj('arch_ba_ap', module_arch_2)
         # self.immu_model = config.init_obj('arch_immu', module_arch_)
         self.ba_model.load_state_dict(torch.load(ba_model_resume)['state_dict'])
@@ -37,8 +39,11 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.ap_model.to(self.device)
         # self.ba_ap_model.to(self.device)
         # self.immu_model.to(self.device)
+        self.ba_model.eval()
+        self.ap_model.eval()
 
-
+        self.transform_proportion = transform_proportion
+        
         if len_epoch is None:
             # epoch-based training
             self.len_epoch = len(self.data_loader)
@@ -75,19 +80,28 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         correct_output = {'count':0, 'num':0}
+        
+        predict_record = {'y_pred':[],'target':[]}
         for batch_idx, (epitope_tokenized, MHC_tokenized, target) in enumerate(self.data_loader):
             epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
             MHC_tokenized = {k:v.to(self.device) for k,v in MHC_tokenized.items()}
             target = target.to(self.device)
+            with torch.no_grad():
+                # parent output 
+                ba_output,ba_ReLU_output = self.ba_model(epitope_tokenized, MHC_tokenized)
+                # print('ba_output shape',ba_ap_output.shape)
+                ap_output, ap_ReLU_output = self.ap_model(epitope_tokenized, MHC_tokenized)
+                # print('ap_output shape',ba_ap_output.shape)
 
-            # parent output 
-            ba_output,ba_ReLU_output = self.ba_model(epitope_tokenized, MHC_tokenized)
-            # print('ba_output shape',ba_ap_output.shape)
-            ap_output, ap_ReLU_output = self.ap_model(epitope_tokenized, MHC_tokenized)
-            # print('ap_output shape',ba_ap_output.shape)
             self.optimizer.zero_grad()
 
-            output = self.model(ba_ReLU_output, ap_ReLU_output, epitope_tokenized, MHC_tokenized)
+            # output = self.model(ba_ReLU_output, ap_ReLU_output, epitope_tokenized, MHC_tokenized)
+            # for generating noise training 
+            if self.transform_proportion > 0:
+                # self.transform_proportion = self.transform_proportion + ((epoch-1) * 0.02)
+                output = self.model(ba_ReLU_output, ap_ReLU_output, epitope_tokenized, MHC_tokenized, batch_idx, self.transform_proportion)
+            else:
+                output = self.model(ba_ReLU_output, ap_ReLU_output, epitope_tokenized, MHC_tokenized)
             # output = torch.unsqueeze(output, 1)
             # print('output',output.shape)
             # target shape: [batch_size,], output shape: [batch_size, 920, 1]
@@ -98,11 +112,15 @@ class EpitopeMHCTraniner(BaseTrainer):
             self.optimizer.step()
 
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
+            self.writer.add_scalar(tag = 'learning_rate',data = self.optimizer.param_groups[0]['lr'])
+
             self.train_metrics.update('loss', loss.item())
             with torch.no_grad():
                 y_pred = output.cpu().detach().numpy()
-                y_pred = np.round_(y_pred)
+                predict_record['y_pred'].append(y_pred)
+                y_pred = np.round(y_pred) # round_
                 y_true = np.squeeze(target.cpu().detach().numpy())
+                predict_record['target'].append(y_true)
                 # print('y_pred',y_pred.shape)
                 # print('y_true',y_true.shape)
                
@@ -123,6 +141,15 @@ class EpitopeMHCTraniner(BaseTrainer):
         log = self.train_metrics.result()
         log['train'] = self.train_metrics.result()
         log['train']['total_accuracy'] = correct_output['count'] / correct_output['num']
+        
+        # predict_record
+        predict_record['y_pred'] = np.concatenate(predict_record['y_pred'])
+        predict_record['target'] = np.concatenate(predict_record['target'])
+        log['train']['ROC_AUC'] = roc_auc(predict_record['y_pred'],predict_record['target'])
+        log['train']['AUPRC'] = calculate_AUPRC(predict_record['y_pred'],predict_record['target'])
+        log['train']['precision'], log['train']['recall'] = calculatePR(np.round(predict_record['y_pred']), predict_record['target'])
+        log['train']['MCC'] = calculateMCC(np.round(predict_record['y_pred']), predict_record['target'])
+
 
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
@@ -130,7 +157,25 @@ class EpitopeMHCTraniner(BaseTrainer):
             log['validation'] = {'val_' +k : v for k,v in val_log.items()}
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
-        return log
+            
+        
+        test_log = None
+        if epoch % 1 == 0:
+            test_output = self.test()
+            test_log={
+                'test_result_of_epoch':epoch,
+                'test_loss':test_output['total_loss'] / test_output['n_samples'],
+                'total_accuracy': test_output['accuracy'],
+                'precision':test_output['precision'],
+                'recall': test_output['recall'],
+                'ROC_AUC': test_output['roc_auc'],
+                'AUPRC': test_output['prc_auc'],
+                'MCC': test_output['MCC']
+            }
+            
+            
+
+        return log,test_log
     
     def _valid_epoch(self, epoch):
         """
@@ -141,6 +186,7 @@ class EpitopeMHCTraniner(BaseTrainer):
         self.model.eval()
         self.valid_metrics.reset()
         correct_output = {'count': 0, 'num': 0}
+        predict_record = {'y_pred':[],'target':[]}
         with torch.no_grad():
             for batch_idx, (epitope_tokenized, MHC_tokenized, target) in enumerate(self.valid_data_loader):  
                 epitope_tokenized = {k:v.to(self.device) for k,v in epitope_tokenized.items()}
@@ -164,8 +210,10 @@ class EpitopeMHCTraniner(BaseTrainer):
                 self.valid_metrics.update('loss', loss.item())
 
                 y_pred = output.cpu().detach().numpy()
-                y_pred = np.round_(y_pred)
+                predict_record['y_pred'].append(y_pred)
+                y_pred = np.round(y_pred)  # round_
                 y_true = np.squeeze(target.cpu().detach().numpy())
+                predict_record['target'].append(y_true)
                 for met in self.metric_fns:
                     self.valid_metrics.update(met.__name__, met(y_pred, y_true))
 
@@ -176,7 +224,14 @@ class EpitopeMHCTraniner(BaseTrainer):
 
         valid_metrics = self.valid_metrics.result()
         test_accuracy = correct_output['count'] / correct_output['num']
-        valid_metrics['total_accuracy'] = test_accuracy   
+        valid_metrics['total_acc'] = test_accuracy   
+        predict_record['y_pred'] = np.concatenate(predict_record['y_pred'])
+        predict_record['target'] = np.concatenate(predict_record['target'])
+        valid_metrics['ROC_AUC'] = roc_auc(predict_record['y_pred'],predict_record['target'])
+        valid_metrics['AUPRC'] = calculate_AUPRC(predict_record['y_pred'],predict_record['target'])
+        valid_metrics['precision'], valid_metrics['recall'] = calculatePR(np.round(predict_record['y_pred']), predict_record['target'])
+        valid_metrics['MCC'] = calculateMCC(np.round(predict_record['y_pred']), predict_record['target'])
+
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
@@ -262,6 +317,10 @@ class EpitopeMHCTraniner(BaseTrainer):
         precision, recall = calculatePR(test_result_df['y_pred_r'].to_list(), test_result_df['y_true'].to_list())
 
         auc = roc_auc(list(test_result_df['y_pred']), list(test_result_df['y_true']))    
+        
+        prc = calculate_AUPRC(list(test_result_df['y_pred']), list(test_result_df['y_true'])) 
+
+        MCC = calculateMCC(test_result_df['y_pred_r'].to_list(), test_result_df['y_true'].to_list())
 
         with open(join(self.config._save_dir, 'test_result.pkl'),'wb') as f:
             pickle.dump(test_result, f)
@@ -271,9 +330,11 @@ class EpitopeMHCTraniner(BaseTrainer):
                        'accuracy': correct_output['count'] / correct_output['num'],
                        'precision': precision,
                        'recall': recall,
-                       'roc_auc':auc
+                       'roc_auc':auc,
+                       'prc_auc':prc,
+                       'MCC':MCC,
                        }
-        return test_output                       
+        return test_output                            
 
     def _progress(self, batch_idx):
         base = '[{}/{} ({:.0f}%)]'
